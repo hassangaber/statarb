@@ -22,3 +22,22 @@ def calculate_cross_correlation(df, stock1, stock2, max_lag, start_date, end_dat
 
     return pd.Series(correlations)
 
+class Kernel():
+    def __init__(self) -> None:
+        pass
+
+    def get_stock(self):
+        pass
+
+class Transforms():
+    def __init__(self):
+        pass
+
+    def sma(self, X:pd.DataFrame, N:int, variable:str, period:str='D') -> pd.DataFrame:
+        X[f'{variable}_SMA_{N}{period}'] = X.groupby('ID')[f'{variable}'].transform(lambda x: x.rolling(window=N).mean().shift())
+        return X
+
+    def ewma(self, X:pd.DataFrame, N:int, variable:str, period:str='D') -> pd.DataFrame:
+        X[f'{variable}_EWMA_{N}{period}'] = X.groupby('ID')[f'{variable}'].transform(lambda x: x.ewm(span=N).mean().shift())
+        return X
+
