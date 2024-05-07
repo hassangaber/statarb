@@ -1,1 +1,1 @@
-web: gunicorn qstrat:app
+web: gunicorn qstrat:server
