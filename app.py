@@ -8,10 +8,10 @@ import random
 import numpy as np
 from scipy import stats
 
-import matplotlib.pyplot as plt
+from compute import compute_signal
 
 # Load and prepare the data
-df = pd.read_csv('data.csv')
+df = pd.read_csv('assets/data.csv')
 df['DATE'] = pd.to_datetime(df['DATE'])
 
 # Initialize the Dash application
@@ -244,8 +244,8 @@ def calculate_and_plot_strategy(df: pd.DataFrame, stock_id: str, start_date: str
     M = M[(M.DATE >= pd.to_datetime(start_date)) & (M.DATE <= pd.to_datetime(end_date))]
 
     # Calculate signals
-    M['signal'] = np.where(M['CLOSE_SMA_9D'] > M['CLOSE_SMA_21D'], 1, 0)
-    M['signal'] = np.where(M['CLOSE_SMA_9D'] < M['CLOSE_SMA_21D'], -1, M['signal'])
+    M = compute_signal(M)
+    
     M['system_returns'] = M['RETURNS'] * M['signal']
     M['entry'] = M.signal.diff()
 
