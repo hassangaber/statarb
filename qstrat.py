@@ -16,6 +16,7 @@ df['DATE'] = pd.to_datetime(df['DATE'])
 
 # Initialize the Dash application
 app = dash.Dash(__name__)
+server = app.server
 
 def random_color() -> str:
     """Generates a random color in RGBA format for Plotly graphs."""
