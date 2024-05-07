@@ -40,4 +40,7 @@ class Transforms():
     def ewma(self, X:pd.DataFrame, N:int, variable:str, period:str='D') -> pd.DataFrame:
         X[f'{variable}_EWMA_{N}{period}'] = X.groupby('ID')[f'{variable}'].transform(lambda x: x.ewm(span=N).mean().shift())
         return X
-
+    
+    def roc(self, X:pd.DataFrame, variable:str, N:int=14) -> pd.DataFrame:
+        X[f'{variable}_ROC_{N}D'] = X.groupby('ID')[variable].transform(lambda x: x.diff(N) / x.shift(N) * 100)
+        return X
