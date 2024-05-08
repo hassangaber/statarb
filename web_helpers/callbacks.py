@@ -113,8 +113,7 @@ def register_callbacks(app, df):
                         end=np.max(filtered_df['RETURNS']),
                         size=bin_size
                     ),
-                    autobinx=False,
-                    #histnorm='probability density'  # Normalize histogram to show probability density
+                    autobinx=False
                 ))
 
                 # Generate KDE line plot on the same scale as the histogram
@@ -141,7 +140,7 @@ def register_callbacks(app, df):
                     title='Volume',
                     overlaying='y',
                     side='right',
-                    showgrid=False  # Hide grid lines for volume for cleaner look
+                    showgrid=False 
                 )
             )
         }, {
@@ -163,17 +162,13 @@ def register_callbacks(app, df):
         State('end-date-input', 'value')]
     )
     def update_trades_tab(n_clicks, stock_id, start_date, end_date):
-        #if n_clicks > 0:
         fig = calculate_and_plot_strategy(df, stock_id, start_date, end_date)
         return fig
-        #return go.Figure() 
 
     def calculate_and_plot_strategy(df: pd.DataFrame, stock_id: str, start_date: str, end_date: str):
         """Calculate trading signals and plot results using Plotly."""
         M = df.loc[df.ID == stock_id]
         M = M[(M.DATE >= pd.to_datetime(start_date)) & (M.DATE <= pd.to_datetime(end_date))]
-
-        # Calculate signals
         M = compute_signal(M)
         
         M['system_returns'] = M['RETURNS'] * M['signal']
@@ -192,7 +187,6 @@ def register_callbacks(app, df):
         fig.add_trace(go.Scatter(x=M['DATE'], y=np.exp(M['RETURNS']).cumprod(), mode='lines', name='Buy/Hold'), row=2, col=1)
         fig.add_trace(go.Scatter(x=M['DATE'], y=np.exp(M['system_returns']).cumprod(), mode='lines', name='Strategy'), row=2, col=1)
 
-        # Update plot layouts
         fig.update_layout(height=1000, width=2000, title_text=f"Trading Strategy Analysis for {stock_id}")
         fig.update_xaxes(title_text="Date")
         fig.update_yaxes(title_text="Price", row=1, col=1)
@@ -214,15 +208,14 @@ def register_callbacks(app, df):
         triggered = callback_context.triggered[0]
         if triggered['value'] and n_clicks > 0:
             weights = np.array([float(w.strip()) for w in weights.split(',')])
-            weights /= np.sum(weights)  # Normalize the weights
+            weights /= np.sum(weights) 
             
             endDate = dt.datetime.now()
-            startDate = endDate - dt.timedelta(days=365 * 10)  # Fetch data for the last 10 years
+            startDate = endDate - dt.timedelta(days=365 * 10) 
 
             _, meanReturns, covMatrix = getData(df, selected_stocks, start=startDate, end=endDate)
 
-            # Run the simulation
-            results, weight_lists, final_values, sharpe_ratios = run_monte_carlo_simulation(6, num_days, weights, meanReturns, covMatrix, initial_portfolio)
+            results, _, _, _ = run_monte_carlo_simulation(6, num_days, weights, meanReturns, covMatrix, initial_portfolio)
             
             return results
         return go.Figure()
@@ -249,7 +242,6 @@ def register_callbacks(app, df):
         for i in range(mc_sims):
             fig.add_trace(go.Scatter(x=np.arange(T), y=portfolio_sims[:, i], mode='lines', name=f'Simulation {i+1}'))
 
-        # Highlighting the best and worst simulations
         best_sim = np.argmax(final_values)
         worst_sim = np.argmin(final_values)
         fig.data[best_sim].line.color = 'green'
@@ -277,7 +269,7 @@ def register_callbacks(app, df):
     def update_table(n_clicks, selected_stocks, weights, num_days, initial_portfolio):
         if n_clicks:
             weights = np.array([float(w.strip()) for w in weights.split(',')])
-            weights /= np.sum(weights)  # Normalize the weights
+            weights /= np.sum(weights)
 
             endDate = dt.datetime.now()
             startDate = endDate - dt.timedelta(days=365 * 10)
@@ -286,7 +278,6 @@ def register_callbacks(app, df):
 
             _, weight_lists, final_values, sharpe_ratios = run_monte_carlo_simulation(6, num_days, weights, meanReturns, covMatrix, initial_portfolio)
 
-            # Prepare data for the DataTable
             data = [{
                 'Simulation': i + 1,
                 'Final Portfolio Value': f"${final_values[i]:,.2f}",
