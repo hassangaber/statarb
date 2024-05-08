@@ -8,6 +8,24 @@ def compute_signal(M:pd.DataFrame, strategy:str = 'momentum') -> pd.DataFrame:
     
     return M
 
+def pivotToClose(df:pd.DataFrame) -> pd.DataFrame:
+    if not pd.api.types.is_datetime64_any_dtype(df['DATE']):
+        df['DATE'] = pd.to_datetime(df['DATE'])
+
+    # Pivot the DataFrame to wide format
+    transformed_df = df.pivot(index='DATE', columns='ID', values='CLOSE')
+
+    return transformed_df
+
+def getData(df:pd.DataFrame, stocks:list[str], start:pd.DatetimeIndex, end:pd.DatetimeIndex) -> tuple[pd.DataFrame, pd.DataFrame]:
+    X = df.loc[df.ID.isin(stocks)].loc[df.DATE > start].loc[df.DATE < end]
+    stockData = X[['ID','DATE','CLOSE']]
+    stockData = pivotToClose(stockData)
+    returns = stockData.pct_change()
+    meanReturns = returns.mean()
+    covMatrix = returns.cov()
+    return returns, meanReturns, covMatrix
+
 class Kernel():
     def __init__(self) -> None:
         pass

@@ -1,14 +1,16 @@
 #!/usr/bin/env/ python3.11
 import numpy as np
 import pandas as pd
+import datetime as dt
 
 import dash
-from dash import dcc, html
+from dash import dash_table
+from dash import dcc, html, callback_context
 from dash.dependencies import Input, Output, State
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
 
-from compute import compute_signal
+from src.compute import compute_signal, getData
 from web_helpers.utils import random_color, kde_scipy
 
 df = pd.read_csv('assets/data.csv')
@@ -17,7 +19,7 @@ app = dash.Dash(__name__)
 server = app.server
 
 app.layout = html.Div([
-    html.H1("Quantitative Strategies Dashboard"),
+    html.H1("Quantitative Strategies Dashboard: Hassan Seeking Alpha"),
     dcc.Tabs(id="tabs", children=[
         # Analysis Tab
         dcc.Tab(label='Analyze Time Series', children=[
@@ -60,6 +62,49 @@ app.layout = html.Div([
             html.Div([
                 dcc.Graph(id='stock-graph', style={'display': 'inline-block', 'width': '49%'}),
                 dcc.Graph(id='returns-graph', style={'display': 'inline-block', 'width': '49%'})
+            ])
+        ]),
+        dcc.Tab(label='Monte-Carlo Portfolio Simulation', children=[
+            html.Div([
+                dcc.Dropdown(
+                    id='stock-dropdown',
+                    options=[{'label': i, 'value': i} for i in df.ID.unique()],  
+                    value=['AAPL', 'NVDA'],
+                    multi=True,
+                    placeholder='Select stocks for your portfolio'
+                ),
+                html.Div([
+                    html.Label('Enter Portfolio Weights (comma separated):'),
+                    dcc.Input(
+                        id='weights-input',
+                        type='text',
+                        value='0.5, 0.5',
+                        style={'margin': '10px'}
+                    )
+                ]),
+                html.Div([
+                    html.Label('Enter Number of Days:'),
+                    dcc.Input(
+                        id='num-days-input',
+                        type='number',
+                        value=100,
+                        style={'margin': '10px'}
+                    )
+                ]),
+                html.Div([
+                    html.Label('Initial Portfolio Value ($):'),
+                    dcc.Input(
+                        id='initial-portfolio-input',
+                        type='number',
+                        value=10000,
+                        style={'margin': '10px'}
+                    )
+                ]),
+                html.Button('Run Simulation', id='run-simulation-button'),
+                dcc.Graph(id='monte-carlo-simulation-graph'),
+                html.Hr(),
+                html.H3('Simulation Results'),
+                dash_table.DataTable(id='simulation-results-table')
             ])
         ]),
         dcc.Tab(label='Backtest with ML Models', children=[
@@ -272,6 +317,112 @@ def calculate_and_plot_strategy(df: pd.DataFrame, stock_id: str, start_date: str
     fig.update_yaxes(title_text="Cumulative Returns", row=2, col=1)
 
     return fig
+
+
+
+@app.callback(
+    Output('monte-carlo-simulation-graph', 'figure'),
+    Input('run-simulation-button', 'n_clicks'),
+    State('stock-dropdown', 'value'),
+    State('weights-input', 'value'),
+    State('num-days-input', 'value'),
+    State('initial-portfolio-input', 'value')
+)
+def update_monte_carlo_simulation(n_clicks, selected_stocks, weights, num_days, initial_portfolio):
+    triggered = callback_context.triggered[0]
+    if triggered['value'] and n_clicks > 0:
+        weights = np.array([float(w.strip()) for w in weights.split(',')])
+        weights /= np.sum(weights)  # Normalize the weights
+        
+        endDate = dt.datetime.now()
+        startDate = endDate - dt.timedelta(days=365 * 10)  # Fetch data for the last 10 years
+
+        _, meanReturns, covMatrix = getData(df, selected_stocks, start=startDate, end=endDate)
+
+        # Run the simulation
+        results, weight_lists, final_values, sharpe_ratios = run_monte_carlo_simulation(6, num_days, weights, meanReturns, covMatrix, initial_portfolio)
+        
+        return results
+    return go.Figure()
+
+def run_monte_carlo_simulation(mc_sims, T, weights, meanReturns, covMatrix, initial_portfolio):
+    portfolio_sims = np.zeros((T, mc_sims))
+    weight_lists = []
+    final_values = []
+    sharpe_ratios = []
+    risk_free_rate = 0.04 / 252  # daily risk-free rate
+    
+    for m in range(mc_sims):
+        dailyReturns = np.random.multivariate_normal(meanReturns, covMatrix, T)
+        portfolio_values = (dailyReturns.dot(weights) + 1).cumprod() * initial_portfolio
+        portfolio_sims[:, m] = portfolio_values
+        weight_lists.append(weights.tolist())
+        final_values.append(portfolio_values[-1])
+        std_dev = np.std(dailyReturns.dot(weights))
+        mean_return = np.mean(dailyReturns.dot(weights))
+        sharpe_ratio = (mean_return - risk_free_rate) / std_dev if std_dev != 0 else 0
+        sharpe_ratios.append(sharpe_ratio)
+
+    fig = go.Figure()
+    for i in range(mc_sims):
+        fig.add_trace(go.Scatter(x=np.arange(T), y=portfolio_sims[:, i], mode='lines', name=f'Simulation {i+1}'))
+
+    # Highlighting the best and worst simulations
+    best_sim = np.argmax(final_values)
+    worst_sim = np.argmin(final_values)
+    fig.data[best_sim].line.color = 'green'
+    fig.data[best_sim].name = 'Best Simulation'
+    fig.data[worst_sim].line.color = 'red'
+    fig.data[worst_sim].name = 'Worst Simulation'
+
+    fig.update_layout(title='Monte Carlo Portfolio Simulation Over Time',
+                      xaxis_title='Days',
+                      yaxis_title='Portfolio Value',
+                      legend_title='Simulation')
+    
+    return fig, weight_lists, final_values, sharpe_ratios
+
+
+@app.callback(
+    Output('simulation-results-table', 'data'),
+    Output('simulation-results-table', 'columns'),
+    Input('run-simulation-button', 'n_clicks'),
+    State('stock-dropdown', 'value'),
+    State('weights-input', 'value'),
+    State('num-days-input', 'value'),
+    State('initial-portfolio-input', 'value')
+)
+def update_table(n_clicks, selected_stocks, weights, num_days, initial_portfolio):
+    if n_clicks:
+        weights = np.array([float(w.strip()) for w in weights.split(',')])
+        weights /= np.sum(weights)  # Normalize the weights
+
+        endDate = dt.datetime.now()
+        startDate = endDate - dt.timedelta(days=365 * 10)
+
+        _, meanReturns, covMatrix = getData(df, selected_stocks, start=startDate, end=endDate)
+
+        _, weight_lists, final_values, sharpe_ratios = run_monte_carlo_simulation(6, num_days, weights, meanReturns, covMatrix, initial_portfolio)
+
+        # Prepare data for the DataTable
+        data = [{
+            'Simulation': i + 1,
+            'Final Portfolio Value': f"${final_values[i]:,.2f}",
+            'Weights': ', '.join(f"{w:.2%}" for w in weight_lists[i]),
+            'Sharpe Ratio': f"{sharpe_ratios[i]:.2f}"
+        } for i in range(len(final_values))]
+
+        columns = [{'name': 'Simulation', 'id': 'Simulation'},
+                   {'name': 'Final Portfolio Value', 'id': 'Final Portfolio Value'},
+                   {'name': 'Weights', 'id': 'Weights'},
+                   {'name': 'Sharpe Ratio', 'id': 'Sharpe Ratio'}]
+
+        return data, columns
+    return [], []
+
+
+
+
 
 if __name__ == '__main__':
     app.run_server(debug=True)
