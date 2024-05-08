@@ -1,68 +1,66 @@
+#!/usr/bin/env/ python3.11
+import numpy as np
+import pandas as pd
+
 import dash
 from dash import dcc, html
 from dash.dependencies import Input, Output, State
-import pandas as pd
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
-import random
-import numpy as np
-from scipy import stats
 
 from compute import compute_signal
+from web_helpers.utils import random_color, kde_scipy
 
 df = pd.read_csv('assets/data.csv')
-df['DATE'] = pd.to_datetime(df['DATE'])
+df.DATE = pd.to_datetime(df.DATE)
 app = dash.Dash(__name__)
 server = app.server
 
-def random_color() -> str:
-    """Generates a random color in RGBA format for Plotly graphs."""
-    return f'rgba({random.randint(0, 55)}, {random.randint(0, 30)}, {random.randint(0, 100)}, 0.8)'
-
-def kde_scipy(x, x_grid, bandwidth=0.2, **kwargs):
-    """Compute the kernel density estimate on a grid of x values."""
-    kde = stats.gaussian_kde(x, bw_method=bandwidth, **kwargs)
-    return kde.evaluate(x_grid)
-
-# App layout
 app.layout = html.Div([
     html.H1("Quantitative Strategies Dashboard"),
     dcc.Tabs(id="tabs", children=[
         # Analysis Tab
         dcc.Tab(label='Analyze Time Series', children=[
-            dcc.Checklist(
-                id='stock-checklist',
-                options=[{'label': i, 'value': i} for i in df['ID'].unique()],
-                value=[df['ID'].unique()[0]],
-                labelStyle={'display': 'inline-block'},
-                inline=True
-            ),
-            dcc.Checklist(
-                id='data-checklist',
-                options=[
-                    {'label': 'Close Prices', 'value': 'CLOSE'},
-                    {'label': 'Simple Moving Averages', 'value': 'SMA'},
-                    {'label': 'Exp-Weighted Moving Averages', 'value': 'EWMA'},
-                    {'label': 'Rate of Change', 'value': 'ROC'},
-                    {'label': 'Volatility', 'value': 'VOLATILITY'},
-                    {'label': 'Normalized Returns', 'value': 'RETURNS'}
-                ],
-                value=['CLOSE'],
-                labelStyle={'display': 'inline-block'}
-            ),
             html.Div([
-                dcc.Checklist(
-                    id='ma-day-dropdown',
-                    options=[{'label': f'{i} Days', 'value': f'{i}'} for i in [3, 9, 21, 50, 65, 120, 360]],
-                    value=['21'],
-                    labelStyle={'display': 'block'},
-                    inputStyle={"margin-right": "5px"},
-                    inline=True,
-                    style={'display': 'block'}
-                )
-            ], id='ma-selector', style={'display': 'none'}),
-            dcc.Graph(id='stock-graph', style={'height': '750px'}),
-            dcc.Graph(id='returns-graph', style={'height': '750px'})
+                html.Div([
+                    dcc.Checklist(
+                        id='stock-checklist',
+                        options=[{'label': i, 'value': i} for i in df['ID'].unique()],
+                        value=[df['ID'].unique()[0]],
+                        inline=True,
+                        style={'padding': '5px', 'width': '100%', 'display': 'inline-block'}
+                    )
+                ], style={'width': '30%', 'display': 'inline-block'}),
+                html.Div([
+                    dcc.Checklist(
+                        id='data-checklist',
+                        options=[
+                            {'label': 'Close Prices', 'value': 'CLOSE'},
+                            {'label': 'Simple Moving Averages', 'value': 'SMA'},
+                            {'label': 'Exp-Weighted Moving Averages', 'value': 'EWMA'},
+                            {'label': 'Rate of Change', 'value': 'ROC'},
+                            {'label': 'Volatility', 'value': 'VOLATILITY'},
+                            {'label': 'Normalized Returns', 'value': 'RETURNS'}
+                        ],
+                        value=['CLOSE','RETURNS'],
+                        inline=True,
+                        style={'padding': '5px', 'width': '100%', 'display': 'inline-block'}
+                    )
+                ], style={'width': '70%', 'display': 'inline-block'}),
+                html.Div([
+                    dcc.Checklist(
+                        id='ma-day-dropdown',
+                        options=[{'label': f'{i} Days', 'value': f'{i}'} for i in [3, 9, 21, 50, 65, 120, 360]],
+                        value=['21'],
+                        inline=True,
+                        style={'display': 'block'}
+                    )
+                ], id='ma-selector', style={'display': 'none'}),
+            ], style={'padding': '10px'}),
+            html.Div([
+                dcc.Graph(id='stock-graph', style={'display': 'inline-block', 'width': '49%'}),
+                dcc.Graph(id='returns-graph', style={'display': 'inline-block', 'width': '49%'})
+            ])
         ]),
         dcc.Tab(label='Backtest with ML Models', children=[
             html.Div([
@@ -81,8 +79,8 @@ app.layout = html.Div([
                 html.Button('Submit', id='submit-button', n_clicks=0),
             ]),
             dcc.Graph(id='trades-graph'),
-            dcc.Graph(id='trades-returns-graph'),
-            html.Div(id='output-container', style={'white-space': 'pre-line'})
+            #dcc.Graph(id='trades-returns-graph'),
+            #html.Div(id='output-container', style={'white-space': 'pre-line'})
         ]),
     ])
 ])
@@ -173,6 +171,11 @@ def update_graph(selected_ids, selected_data, selected_days):
 
         # Histogram for Returns as a frequency distribution
         if 'RETURNS' in selected_data:
+            # Calculate the total count to normalize histogram heights to probability density
+            total_counts = len(filtered_df['RETURNS'].dropna())
+            bin_size = (np.max(filtered_df['RETURNS']) - np.min(filtered_df['RETURNS'])) / 40
+            histogram_scaling_factor = total_counts * bin_size
+
             traces_returns.append(go.Histogram(
                 x=filtered_df['RETURNS'],
                 name=f'{selected_id} Returns Frequency',
@@ -181,22 +184,25 @@ def update_graph(selected_ids, selected_data, selected_days):
                 xbins=dict(
                     start=np.min(filtered_df['RETURNS']),
                     end=np.max(filtered_df['RETURNS']),
-                    size=(np.max(filtered_df['RETURNS']) - np.min(filtered_df['RETURNS'])) / 40
+                    size=bin_size
                 ),
-                autobinx=False
+                autobinx=False,
+                #histnorm='probability density'  # Normalize histogram to show probability density
             ))
 
+            # Generate KDE line plot on the same scale as the histogram
             x_grid = np.linspace(np.min(filtered_df['RETURNS']), np.max(filtered_df['RETURNS']), 1000)
             pdf = kde_scipy(filtered_df['RETURNS'].dropna(), x_grid, bandwidth=0.2)
             
-            # Adding KDE as a Scatter plot
+            # Adjust y values to align with histogram scaling
             traces_returns.append(go.Scatter(
                 x=x_grid,
-                y=pdf,
+                y=pdf * histogram_scaling_factor,  # Scale PDF to be on the same y-scale as histogram
                 mode='lines',
                 name=f'{selected_id} Returns KDE',
                 line=dict(color=random_color(), width=2)
             ))
+
 
     return ({
         'data': traces_main,
@@ -230,10 +236,10 @@ def update_graph(selected_ids, selected_data, selected_days):
      State('end-date-input', 'value')]
 )
 def update_trades_tab(n_clicks, stock_id, start_date, end_date):
-    if n_clicks > 0:
-        fig = calculate_and_plot_strategy(df, stock_id, start_date, end_date)
-        return fig
-    return go.Figure() 
+    #if n_clicks > 0:
+    fig = calculate_and_plot_strategy(df, stock_id, start_date, end_date)
+    return fig
+    #return go.Figure() 
 
 def calculate_and_plot_strategy(df: pd.DataFrame, stock_id: str, start_date: str, end_date: str):
     """Calculate trading signals and plot results using Plotly."""
