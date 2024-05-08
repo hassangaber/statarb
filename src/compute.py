@@ -26,11 +26,15 @@ def getData(df:pd.DataFrame, stocks:list[str], start:pd.DatetimeIndex, end:pd.Da
     covMatrix = returns.cov()
     return returns, meanReturns, covMatrix
 
-class Kernel():
+class Wrangle():
     def __init__(self) -> None:
         pass
 
     def get_stock(self):
+        pass
+
+class Portfolio():
+    def __init__(self) -> None:
         pass
 
 class Transforms():
