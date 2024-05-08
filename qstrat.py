@@ -10,11 +10,8 @@ from scipy import stats
 
 from compute import compute_signal
 
-# Load and prepare the data
 df = pd.read_csv('assets/data.csv')
 df['DATE'] = pd.to_datetime(df['DATE'])
-
-# Initialize the Dash application
 app = dash.Dash(__name__)
 server = app.server
 
@@ -29,10 +26,10 @@ def kde_scipy(x, x_grid, bandwidth=0.2, **kwargs):
 
 # App layout
 app.layout = html.Div([
-    html.H1("Statistical Arbitrage Dashboard"),
+    html.H1("Quantitative Strategies Dashboard"),
     dcc.Tabs(id="tabs", children=[
         # Analysis Tab
-        dcc.Tab(label='Analysis', children=[
+        dcc.Tab(label='Analyze Time Series', children=[
             dcc.Checklist(
                 id='stock-checklist',
                 options=[{'label': i, 'value': i} for i in df['ID'].unique()],
@@ -44,11 +41,11 @@ app.layout = html.Div([
                 id='data-checklist',
                 options=[
                     {'label': 'Close Prices', 'value': 'CLOSE'},
-                    {'label': 'Moving Averages (SMA)', 'value': 'SMA'},
-                    {'label': 'Moving Averages (EWMA)', 'value': 'EWMA'},
+                    {'label': 'Simple Moving Averages', 'value': 'SMA'},
+                    {'label': 'Exp-Weighted Moving Averages', 'value': 'EWMA'},
                     {'label': 'Rate of Change', 'value': 'ROC'},
                     {'label': 'Volatility', 'value': 'VOLATILITY'},
-                    {'label': 'Returns', 'value': 'RETURNS'}
+                    {'label': 'Normalized Returns', 'value': 'RETURNS'}
                 ],
                 value=['CLOSE'],
                 labelStyle={'display': 'inline-block'}
@@ -57,25 +54,26 @@ app.layout = html.Div([
                 dcc.Checklist(
                     id='ma-day-dropdown',
                     options=[{'label': f'{i} Days', 'value': f'{i}'} for i in [3, 9, 21, 50, 65, 120, 360]],
-                    value=['50'],
+                    value=['21'],
                     labelStyle={'display': 'block'},
                     inputStyle={"margin-right": "5px"},
                     inline=True,
-                    style={'display': 'none'}
+                    style={'display': 'block'}
                 )
             ], id='ma-selector', style={'display': 'none'}),
             dcc.Graph(id='stock-graph', style={'height': '750px'}),
             dcc.Graph(id='returns-graph', style={'height': '750px'})
         ]),
-        # Simulation Tab
-        dcc.Tab(label='Simulation', children=[
+        dcc.Tab(label='Backtest with ML Models', children=[
             html.Div([
-                html.H3('Simulation Space')
-                # Placeholder for future simulation controls and outputs
-            ])
+                dcc.Input(id='stock-input', type='text', placeholder='Enter stock ID', value='NFLX'),
+                dcc.Input(id='start-date-input', type='text', placeholder='Enter start date (YYYY-MM-DD)', value='2020-03-01'),
+                dcc.Input(id='end-date-input', type='text', placeholder='Enter end date (YYYY-MM-DD)', value='2020-07-16'),
+                html.Button('Submit', id='submit-button', n_clicks=0),
+            ]),
         ]),
         # Trades Tab
-        dcc.Tab(label='Trades', children=[
+        dcc.Tab(label='Backtest with Indictors', children=[
             html.Div([
                 dcc.Input(id='stock-input', type='text', placeholder='Enter stock ID', value='NFLX'),
                 dcc.Input(id='start-date-input', type='text', placeholder='Enter start date (YYYY-MM-DD)', value='2020-03-01'),
@@ -235,12 +233,10 @@ def update_trades_tab(n_clicks, stock_id, start_date, end_date):
     if n_clicks > 0:
         fig = calculate_and_plot_strategy(df, stock_id, start_date, end_date)
         return fig
-    
     return go.Figure() 
 
 def calculate_and_plot_strategy(df: pd.DataFrame, stock_id: str, start_date: str, end_date: str):
     """Calculate trading signals and plot results using Plotly."""
-    # Filtering the DataFrame
     M = df.loc[df.ID == stock_id]
     M = M[(M.DATE >= pd.to_datetime(start_date)) & (M.DATE <= pd.to_datetime(end_date))]
 
@@ -250,7 +246,6 @@ def calculate_and_plot_strategy(df: pd.DataFrame, stock_id: str, start_date: str
     M['system_returns'] = M['RETURNS'] * M['signal']
     M['entry'] = M.signal.diff()
 
-    # Create figures using Plotly for interactive plots
     fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.1, subplot_titles=('Price and Signals', 'Cumulative Returns'))
 
     # Add price, SMA lines, and entry signals to the first plot
@@ -272,7 +267,5 @@ def calculate_and_plot_strategy(df: pd.DataFrame, stock_id: str, start_date: str
 
     return fig
 
-
-# Run the app
 if __name__ == '__main__':
     app.run_server(debug=True)
