@@ -26,8 +26,6 @@ def export_layout(df:pd.DataFrame) -> html.Div:
                                 {'label': 'Close Prices', 'value': 'CLOSE'},
                                 {'label': 'Simple Moving Averages', 'value': 'SMA'},
                                 {'label': 'Exp-Weighted Moving Averages', 'value': 'EWMA'},
-                                {'label': 'Rate of Change', 'value': 'ROC'},
-                                {'label': 'Volatility', 'value': 'VOLATILITY'},
                                 {'label': 'Normalized Returns', 'value': 'RETURNS'}
                             ],
                             value=['CLOSE','RETURNS'],
@@ -44,10 +42,18 @@ def export_layout(df:pd.DataFrame) -> html.Div:
                             style={'display': 'block'}
                         )
                     ], id='ma-selector', style={'display': 'none'}),
+                    dcc.DatePickerRange(
+                        id='date-range-selector',
+                        start_date=df['DATE'].min(),
+                        end_date=df['DATE'].max(),
+                        display_format='YYYY-MM-DD'
+                    ),
                 ], style={'padding': '10px'}),
                 html.Div([
                     dcc.Graph(id='stock-graph', style={'display': 'inline-block', 'width': '49%'}),
-                    dcc.Graph(id='returns-graph', style={'display': 'inline-block', 'width': '49%'})
+                    dcc.Graph(id='returns-graph', style={'display': 'inline-block', 'width': '49%'}),
+                    dcc.Graph(id='volatility-graph', style={'display': 'inline-block', 'width': '49%'}),
+                    dcc.Graph(id='roc-graph', style={'display': 'inline-block', 'width': '49%'}),
                 ])
             ]),
 
@@ -116,5 +122,5 @@ def export_layout(df:pd.DataFrame) -> html.Div:
                 ]),
                 dcc.Graph(id='trades-graph'),
             ]),
-        ])
-    ])
+        ]),
+])

@@ -24,19 +24,34 @@ def register_callbacks(app, df):
 
     @app.callback(
         [Output('stock-graph', 'figure'),
-        Output('returns-graph', 'figure')],
+        Output('returns-graph', 'figure'),
+        Output('volatility-graph', 'figure'),
+        Output('roc-graph', 'figure'),],
         [Input('stock-checklist', 'value'),
         Input('data-checklist', 'value'),
-        Input('ma-day-dropdown', 'value')]
+        Input('ma-day-dropdown', 'value'),
+        Input('date-range-selector', 'start_date'),
+        Input('date-range-selector', 'end_date')]
     )
-    def update_graph(selected_ids, selected_data, selected_days):
+    def update_graph(selected_ids, selected_data, selected_days, start_date, end_date):
         traces_main = []
         traces_returns = []
+        traces_volatility = []
+        traces_roc = []
         for selected_id in selected_ids:
             filtered_df = df[df['ID'] == selected_id]
-            
+            filtered_df = filtered_df[(filtered_df['DATE'] >= start_date) & (filtered_df['DATE'] <= end_date)]
+            print(filtered_df.CLOSE.values)
             # Add volume bars and close prices to the main graph
             if 'CLOSE' in selected_data:
+                traces_main.append(go.Scatter(
+                    x=filtered_df['DATE'],
+                    y=filtered_df['CLOSE'].astype(float),
+                    mode='lines',
+                    name=f'{selected_id} Close',
+                    line=dict(color=random_color()),
+                    yaxis='y1'
+                ))
                 traces_main.append(go.Bar(
                     x=filtered_df['DATE'],
                     y=filtered_df['VOLUME'],
@@ -45,13 +60,7 @@ def register_callbacks(app, df):
                     opacity=0.6,
                     yaxis='y2'
                 ))
-                traces_main.append(go.Scatter(
-                    x=filtered_df['DATE'],
-                    y=filtered_df['CLOSE'],
-                    mode='lines',
-                    name=f'{selected_id} Close',
-                    line=dict(color=random_color())
-                ))
+                
 
             # Add SMA, EWMA, ROC, and Volatility traces based on user selection
             for day in selected_days:
@@ -75,26 +84,6 @@ def register_callbacks(app, df):
                             name=f'{selected_id} EWMA {day}D',
                             line=dict(color=random_color())
                         ))
-
-            if 'ROC' in selected_data:
-                roc_column = f'CLOSE_ROC_{day}D'
-                if roc_column in filtered_df.columns:
-                    traces_main.append(go.Scatter(
-                        x=filtered_df['DATE'],
-                        y=filtered_df[roc_column],
-                        mode='lines',
-                        name=f'{selected_id} ROC {day}D',
-                        line=dict(color=random_color())
-                    ))
-
-            if 'VOLATILITY' in selected_data:
-                traces_main.append(go.Scatter(
-                    x=filtered_df['DATE'],
-                    y=filtered_df['VOLATILITY_90D'],
-                    mode='lines',
-                    name=f'{selected_id} Volatility 90D',
-                    line=dict(color=random_color())
-                ))
 
             # Histogram for Returns as a frequency distribution
             if 'RETURNS' in selected_data:
@@ -128,28 +117,51 @@ def register_callbacks(app, df):
                     name=f'{selected_id} Returns KDE',
                     line=dict(color=random_color(), width=2)
                 ))
-
+            traces_volatility.append(go.Scatter(
+            x=filtered_df['DATE'],
+            y=filtered_df['VOLATILITY_90D'],
+            mode='lines',
+            name=f'{selected_id} Volatility 90D',
+            marker=dict(color=random_color()),
+            ))
+            traces_roc.append(go.Scatter(
+                x=filtered_df['DATE'],
+                y=filtered_df[f'CLOSE_ROC_{21 if len(selected_days)==0  else selected_days[0]}D'],
+                mode='lines',
+                name=f'{selected_id} ROC',
+                marker=dict(color=random_color()),
+            ))
 
         return ({
-            'data': traces_main,
-            'layout': go.Layout(
-                title='Stock Data',
+        'data': traces_main,
+        'layout': go.Layout(
+                title='Stock Data', 
                 xaxis=dict(title='Date'),
-                yaxis=dict(title='Price and Volume'),
+                yaxis1=dict(
+                    title='Close Price',
+                    side='left',  # Close price on the left y-axis
+                    showgrid=False,
+                    type='linear',  # Linear scale
+                    autorange=True  # Automatically adjust the range based on the data
+                ),
                 yaxis2=dict(
                     title='Volume',
-                    overlaying='y',
-                    side='right',
-                    showgrid=False 
-                )
-            )
-        }, {
+                    side='right',  # Volume on the right y-axis
+                    overlaying='y',  # This specifies that yaxis2 is overlaying yaxis
+                    type='linear',  # Linear scale
+                    autorange=True,  # Automatically adjust the range based on the data
+                    showgrid=False
+                ))
+        },
+        {
             'data': traces_returns,
-            'layout': go.Layout(
-                title='Returns Frequency and KDE',
-                xaxis=dict(title='Returns'),
-                yaxis=dict(title='Frequency / Density')
-            )
+            'layout': go.Layout(title='Returns Frequency and KDE', xaxis=dict(title='Returns'), yaxis=dict(title='Frequency / Density'))
+        }, {
+            'data': traces_volatility,
+            'layout': go.Layout(title='Volatility 90D', xaxis=dict(title='Date'), yaxis=dict(title='Volatility'))
+        }, {
+            'data': traces_roc,
+            'layout': go.Layout(title='Rate of Change', xaxis=dict(title='Date'), yaxis=dict(title='ROC'))
         })
 
 
