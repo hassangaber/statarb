@@ -1,17 +1,19 @@
-
 import numpy as np
 import pandas as pd
 import datetime as dt
 
+import dash
 from dash import callback_context
 from dash.dependencies import Input, Output, State
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
 
 from src.compute import compute_signal, getData
+from src.monteCarlo import MC
 from web_helpers.utils import random_color, kde_scipy
 
-def register_callbacks(app, df):    
+def register_callbacks(app:dash.Dash, df:pd.DataFrame) -> None:
+        
     @app.callback(
         Output('ma-selector', 'style'),
         [Input('data-checklist', 'value')]
@@ -232,23 +234,9 @@ def register_callbacks(app, df):
             return results
         return go.Figure()
 
-    def run_monte_carlo_simulation(mc_sims, T, weights, meanReturns, covMatrix, initial_portfolio):
-        portfolio_sims = np.zeros((T, mc_sims))
-        weight_lists = []
-        final_values = []
-        sharpe_ratios = []
-        risk_free_rate = 0.04 / 252  # daily risk-free rate
-        
-        for m in range(mc_sims):
-            dailyReturns = np.random.multivariate_normal(meanReturns, covMatrix, T)
-            portfolio_values = (dailyReturns.dot(weights) + 1).cumprod() * initial_portfolio
-            portfolio_sims[:, m] = portfolio_values
-            weight_lists.append(weights.tolist())
-            final_values.append(portfolio_values[-1])
-            std_dev = np.std(dailyReturns.dot(weights))
-            mean_return = np.mean(dailyReturns.dot(weights))
-            sharpe_ratio = (mean_return - risk_free_rate) / std_dev if std_dev != 0 else 0
-            sharpe_ratios.append(sharpe_ratio)
+    def run_monte_carlo_simulation(mc_sims, T, weights, meanReturns, covMatrix, initial_portfolio) -> tuple:
+
+        portfolio_sims, sharpe_ratios, weight_lists, final_values = MC(mc_sims, T, weights, meanReturns, covMatrix, initial_portfolio)
 
         fig = go.Figure()
         for i in range(mc_sims):
@@ -266,7 +254,7 @@ def register_callbacks(app, df):
                         yaxis_title='Portfolio Value',
                         legend_title='Simulation')
         
-        return fig, weight_lists, final_values, sharpe_ratios
+        return (fig, weight_lists, final_values, sharpe_ratios)
 
 
     @app.callback(
@@ -278,7 +266,7 @@ def register_callbacks(app, df):
         State('num-days-input', 'value'),
         State('initial-portfolio-input', 'value')
     )
-    def update_table(n_clicks, selected_stocks, weights, num_days, initial_portfolio):
+    def update_table(n_clicks, selected_stocks, weights, num_days, initial_portfolio) -> tuple[list, list]:
         if n_clicks:
             weights = np.array([float(w.strip()) for w in weights.split(',')])
             weights /= np.sum(weights)
@@ -293,15 +281,15 @@ def register_callbacks(app, df):
             data = [{
                 'Simulation': i + 1,
                 'Final Portfolio Value': f"${final_values[i]:,.2f}",
-                'Weights': ', '.join(f"{w:.2%}" for w in weight_lists[i]),
+                #'Weights': ', '.join(f"{w:.2%}" for w in weight_lists[i]),
+                'Mean Returns': f"{meanReturns.values}",
                 'Sharpe Ratio': f"{sharpe_ratios[i]:.2f}"
             } for i in range(len(final_values))]
 
             columns = [{'name': 'Simulation', 'id': 'Simulation'},
                     {'name': 'Final Portfolio Value', 'id': 'Final Portfolio Value'},
-                    {'name': 'Weights', 'id': 'Weights'},
+                    {'name': 'Mean Returns', 'id': 'Mean Returns'},
                     {'name': 'Sharpe Ratio', 'id': 'Sharpe Ratio'}]
 
-            return data, columns
+            return (data, columns)
         return [], []
-

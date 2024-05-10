@@ -6,16 +6,13 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler
 from torch.utils.data import DataLoader, TensorDataset
 
-# Load and preprocess data
 data = pd.read_csv('../assets/data.csv')
-data.fillna(0, inplace=True)  # Fill missing values
+data.fillna(0, inplace=True) 
 data['DATE'] = pd.to_datetime(data['DATE'])
 data = data[data['ID'] == 'AAPL']
 data = data[data['DATE'] > '2017-01-01'].loc[data.DATE < '2023-01-01']
 
 features = data
-
-
 # Calculate future returns for a horizon, e.g., 5 days
 future_period = 5
 data['future_return'] = data['CLOSE'].shift(-future_period) / data['CLOSE'] - 1
