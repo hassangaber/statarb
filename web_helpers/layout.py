@@ -108,6 +108,14 @@ def export_layout(df:pd.DataFrame) -> html.Div:
 
             # Monte-Carlo Portfolio Simulation Tab
             dcc.Tab(label='Monte-Carlo Portfolio Simulation', children=[
+                html.P('This tab runs simulations to project future values of investment portfolios based on historical data \
+                         and statistical methods. By generating a range of possible outcomes for each asset within the portfolio, \
+                       the tab helps investors visualize potential risks and returns over a specified time period. Key statistics such as \
+                        Value at Risk (VaR) and Conditional Value at Risk (CVaR) are calculated and displayed. VaR provides a threshold below \
+                       which the portfolio value is unlikely to fall at a given confidence level, indicating the maximum expected loss under \
+                       normal market conditions. CVaR, on the other hand, estimates the average loss exceeding the VaR, offering insight into \
+                       potential losses in worst-case scenarios. These metrics assist investors in making informed decisions about risk management,\
+                        asset allocation, and potential adjustments to their investment strategies.', style={'font-size':'24px'}),
                 html.Div([
                     dcc.Dropdown(
                         id='stock-dropdown',
