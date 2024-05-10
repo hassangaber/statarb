@@ -6,9 +6,11 @@ def export_layout(df:pd.DataFrame) -> html.Div:
     return html.Div([
         html.H1("Quantitative Strategies Dashboard: Seeking Alpha"),
             dcc.Tabs(id="tabs", children=[
+
+                # Intro Tab
                 dcc.Tab(label='Introduction', children=[
                 html.Div([
-                    html.H1('Hassan Gaber', style={'color': '#2c3e50'}),
+                    html.H1('Hassan Gaber', style={'color': '#A020F0'}),
                     html.P(
                         'Welcome to my personal project site where I explore automated quantitative trading strategies, '
                         'demonstrating the process of strategy development and backtesting with the objective of maximizing excess returns.',
@@ -49,6 +51,14 @@ def export_layout(df:pd.DataFrame) -> html.Div:
             # Analysis Tab
             dcc.Tab(label='Analyze Time Series', children=[
                 html.Div([
+                    html.Div([
+                        html.P('In this tab, all the raw market data can be viewed in the graph matrix representing the close price, stock returns frequency, volatility, and close price rate of change. \
+                                The purpose of this section is to provide a tab where all the raw features and engineered features can be visualized. Mutliple stocks can be viewed together \
+                                and a date range can be selected for backtesting purposes.', style={'font-size':'26px'}),
+                        html.P(f'FEATURES:', style={'font-size':'23px'}),
+                        html.Dl(f'{df.columns.to_list()[1:]}'),
+                        html.Hr(),
+                    ]),
                     html.Div([
                         dcc.Checklist(
                             id='stock-checklist',
