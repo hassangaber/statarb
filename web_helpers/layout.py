@@ -146,8 +146,10 @@ def export_layout(df:pd.DataFrame) -> html.Div:
                     html.Button('Run Simulation', id='run-simulation-button'),
                     dcc.Graph(id='monte-carlo-simulation-graph'),
                     html.Hr(),
+                    dcc.Graph(id='distribution-graph'),
                     html.H3('Simulation Results'),
-                    dash_table.DataTable(id='simulation-results-table')
+                    dash_table.DataTable(id='simulation-results-table'),
+                    
                 ])
             ]),
 

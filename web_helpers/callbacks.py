@@ -5,6 +5,7 @@ import datetime as dt
 import dash
 from dash import callback_context
 from dash.dependencies import Input, Output, State
+import plotly.figure_factory as ff
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
 
@@ -14,6 +15,8 @@ from web_helpers.utils import random_color, kde_scipy
 
 def register_callbacks(app:dash.Dash, df:pd.DataFrame) -> None:
         
+    
+    """TIME SERIES ANALYSIS CALLBACK"""
     @app.callback(
         Output('ma-selector', 'style'),
         [Input('data-checklist', 'value')]
@@ -35,16 +38,16 @@ def register_callbacks(app:dash.Dash, df:pd.DataFrame) -> None:
         Input('date-range-selector', 'start_date'),
         Input('date-range-selector', 'end_date')]
     )
-    def update_graph(selected_ids, selected_data, selected_days, start_date, end_date):
-        traces_main = []
-        traces_returns = []
-        traces_volatility = []
-        traces_roc = []
+    def update_graph(selected_ids:list[str], selected_data:list[str], selected_days:list[int], start_date:str, end_date:str
+    ) -> tuple[dict, dict, dict, dict]:
+        
+        traces_main,traces_returns,traces_volatility,traces_roc = [],[],[],[]
+
         for selected_id in selected_ids:
+
             filtered_df = df[df['ID'] == selected_id]
             filtered_df = filtered_df[(filtered_df['DATE'] >= start_date) & (filtered_df['DATE'] <= end_date)]
-            print(filtered_df.CLOSE.values)
-            # Add volume bars and close prices to the main graph
+
             if 'CLOSE' in selected_data:
                 traces_main.append(go.Scatter(
                     x=filtered_df['DATE'],
@@ -64,11 +67,13 @@ def register_callbacks(app:dash.Dash, df:pd.DataFrame) -> None:
                 ))
                 
 
-            # Add SMA, EWMA, ROC, and Volatility traces based on user selection
             for day in selected_days:
+
                 if 'SMA' in selected_data:
+
                     sma_column = f'CLOSE_SMA_{day}D'
                     if sma_column in filtered_df.columns:
+
                         traces_main.append(go.Scatter(
                             x=filtered_df['DATE'],
                             y=filtered_df[sma_column],
@@ -76,9 +81,12 @@ def register_callbacks(app:dash.Dash, df:pd.DataFrame) -> None:
                             name=f'{selected_id} SMA {day}D',
                             line=dict(color=random_color())
                         ))
+
                 if 'EWMA' in selected_data:
+
                     ewma_column = f'CLOSE_EWMA_{day}D'
                     if ewma_column in filtered_df.columns:
+
                         traces_main.append(go.Scatter(
                             x=filtered_df['DATE'],
                             y=filtered_df[ewma_column],
@@ -87,9 +95,8 @@ def register_callbacks(app:dash.Dash, df:pd.DataFrame) -> None:
                             line=dict(color=random_color())
                         ))
 
-            # Histogram for Returns as a frequency distribution
             if 'RETURNS' in selected_data:
-                # Calculate the total count to normalize histogram heights to probability density
+
                 total_counts = len(filtered_df['RETURNS'].dropna())
                 bin_size = (np.max(filtered_df['RETURNS']) - np.min(filtered_df['RETURNS'])) / 40
                 histogram_scaling_factor = total_counts * bin_size
@@ -107,25 +114,25 @@ def register_callbacks(app:dash.Dash, df:pd.DataFrame) -> None:
                     autobinx=False
                 ))
 
-                # Generate KDE line plot on the same scale as the histogram
                 x_grid = np.linspace(np.min(filtered_df['RETURNS']), np.max(filtered_df['RETURNS']), 1000)
                 pdf = kde_scipy(filtered_df['RETURNS'].dropna(), x_grid, bandwidth=0.2)
                 
-                # Adjust y values to align with histogram scaling
                 traces_returns.append(go.Scatter(
                     x=x_grid,
-                    y=pdf * histogram_scaling_factor,  # Scale PDF to be on the same y-scale as histogram
+                    y=pdf * histogram_scaling_factor,  
                     mode='lines',
                     name=f'{selected_id} Returns KDE',
                     line=dict(color=random_color(), width=2)
                 ))
+
             traces_volatility.append(go.Scatter(
-            x=filtered_df['DATE'],
-            y=filtered_df['VOLATILITY_90D'],
-            mode='lines',
-            name=f'{selected_id} Volatility 90D',
-            marker=dict(color=random_color()),
+                x=filtered_df['DATE'],
+                y=filtered_df['VOLATILITY_90D'],
+                mode='lines',
+                name=f'{selected_id} Volatility 90D',
+                marker=dict(color=random_color())
             ))
+
             traces_roc.append(go.Scatter(
                 x=filtered_df['DATE'],
                 y=filtered_df[f'CLOSE_ROC_{21 if len(selected_days)==0  else selected_days[0]}D'],
@@ -135,25 +142,25 @@ def register_callbacks(app:dash.Dash, df:pd.DataFrame) -> None:
             ))
 
         return ({
-        'data': traces_main,
-        'layout': go.Layout(
-                title='Stock Data', 
-                xaxis=dict(title='Date'),
-                yaxis1=dict(
-                    title='Close Price',
-                    side='left',  # Close price on the left y-axis
-                    showgrid=False,
-                    type='linear',  # Linear scale
-                    autorange=True  # Automatically adjust the range based on the data
-                ),
-                yaxis2=dict(
-                    title='Volume',
-                    side='right',  # Volume on the right y-axis
-                    overlaying='y',  # This specifies that yaxis2 is overlaying yaxis
-                    type='linear',  # Linear scale
-                    autorange=True,  # Automatically adjust the range based on the data
-                    showgrid=False
-                ))
+            'data': traces_main,
+            'layout': go.Layout(
+                    title='Stock Data', 
+                    xaxis=dict(title='Date'),
+                    yaxis1=dict(
+                        title='Close Price',
+                        side='left',  # Close price on the left y-axis
+                        showgrid=False,
+                        type='linear',  # Linear scale
+                        autorange=True  # Automatically adjust the range based on the data
+                    ),
+                    yaxis2=dict(
+                        title='Volume',
+                        side='right',  # Volume on the right y-axis
+                        overlaying='y',  # This specifies that yaxis2 is overlaying yaxis
+                        type='linear',  # Linear scale
+                        autorange=True,  # Automatically adjust the range based on the data
+                        showgrid=False
+                    ))
         },
         {
             'data': traces_returns,
@@ -166,8 +173,7 @@ def register_callbacks(app:dash.Dash, df:pd.DataFrame) -> None:
             'layout': go.Layout(title='Rate of Change', xaxis=dict(title='Date'), yaxis=dict(title='ROC'))
         })
 
-
-
+    """BACKTEST WITH INDICATORS CALLBACK"""
     @app.callback(
         Output('trades-graph', 'figure'),
         [Input('submit-button', 'n_clicks')],
@@ -208,8 +214,7 @@ def register_callbacks(app:dash.Dash, df:pd.DataFrame) -> None:
 
         return fig
 
-
-
+    """MONTE-CARLO CALLBACK"""
     @app.callback(
         Output('monte-carlo-simulation-graph', 'figure'),
         Input('run-simulation-button', 'n_clicks'),
@@ -220,6 +225,7 @@ def register_callbacks(app:dash.Dash, df:pd.DataFrame) -> None:
     )
     def update_monte_carlo_simulation(n_clicks, selected_stocks, weights, num_days, initial_portfolio):
         triggered = callback_context.triggered[0]
+
         if triggered['value'] and n_clicks > 0:
             weights = np.array([float(w.strip()) for w in weights.split(',')])
             weights /= np.sum(weights) 
@@ -229,14 +235,14 @@ def register_callbacks(app:dash.Dash, df:pd.DataFrame) -> None:
 
             _, meanReturns, covMatrix = getData(df, selected_stocks, start=startDate, end=endDate)
 
-            results, _, _, _ = run_monte_carlo_simulation(6, num_days, weights, meanReturns, covMatrix, initial_portfolio)
+            res = run_monte_carlo_simulation(6, num_days, weights, meanReturns, covMatrix, initial_portfolio)
             
-            return results
+            return res[0]
         return go.Figure()
 
     def run_monte_carlo_simulation(mc_sims, T, weights, meanReturns, covMatrix, initial_portfolio) -> tuple:
 
-        portfolio_sims, sharpe_ratios, weight_lists, final_values = MC(mc_sims, T, weights, meanReturns, covMatrix, initial_portfolio)
+        portfolio_sims, sharpe_ratios, weight_lists, final_values, var, cvar, spread = MC(mc_sims, T, weights, meanReturns, covMatrix, initial_portfolio)
 
         fig = go.Figure()
         for i in range(mc_sims):
@@ -254,42 +260,121 @@ def register_callbacks(app:dash.Dash, df:pd.DataFrame) -> None:
                         yaxis_title='Portfolio Value',
                         legend_title='Simulation')
         
-        return (fig, weight_lists, final_values, sharpe_ratios)
+        return (fig, weight_lists, final_values, sharpe_ratios, var, cvar, spread)
 
 
     @app.callback(
-        Output('simulation-results-table', 'data'),
+        [Output('simulation-results-table', 'data'),
         Output('simulation-results-table', 'columns'),
-        Input('run-simulation-button', 'n_clicks'),
-        State('stock-dropdown', 'value'),
+        Output('distribution-graph', 'figure')],
+        [Input('run-simulation-button', 'n_clicks')],
+        [State('stock-dropdown', 'value'),
         State('weights-input', 'value'),
         State('num-days-input', 'value'),
-        State('initial-portfolio-input', 'value')
+        State('initial-portfolio-input', 'value')]
     )
-    def update_table(n_clicks, selected_stocks, weights, num_days, initial_portfolio) -> tuple[list, list]:
+
+    def update_table(n_clicks, selected_stocks, weights, num_days, initial_portfolio):
         if n_clicks:
             weights = np.array([float(w.strip()) for w in weights.split(',')])
             weights /= np.sum(weights)
 
             endDate = dt.datetime.now()
-            startDate = endDate - dt.timedelta(days=365 * 10)
+            startDate = endDate - dt.timedelta(days=365*13)
 
-            _, meanReturns, covMatrix = getData(df, selected_stocks, start=startDate, end=endDate)
+            (_, meanReturns, covMatrix) = getData(df, selected_stocks, start=startDate, end=endDate)
+            (_, weight_lists, final_values, sharpe_ratios, var, cvar, spread) = run_monte_carlo_simulation(2000, num_days, weights, meanReturns, covMatrix, initial_portfolio)
 
-            _, weight_lists, final_values, sharpe_ratios = run_monte_carlo_simulation(6, num_days, weights, meanReturns, covMatrix, initial_portfolio)
+            VaR = initial_portfolio - var
+            CVaR = initial_portfolio - cvar
 
-            data = [{
+            sorted_indices = np.argsort(final_values)[::-1]
+            top_bottom_indices = np.concatenate([sorted_indices[:5], sorted_indices[-5:]])
+
+            data = [
+                {
                 'Simulation': i + 1,
                 'Final Portfolio Value': f"${final_values[i]:,.2f}",
-                #'Weights': ', '.join(f"{w:.2%}" for w in weight_lists[i]),
-                'Mean Returns': f"{meanReturns.values}",
+                'VaR, CVaR': f"{VaR}, {CVaR}",
+                'Sigma' : f"{spread[i]*100:.2f}%",
                 'Sharpe Ratio': f"{sharpe_ratios[i]:.2f}"
-            } for i in range(len(final_values))]
+                } 
 
-            columns = [{'name': 'Simulation', 'id': 'Simulation'},
-                    {'name': 'Final Portfolio Value', 'id': 'Final Portfolio Value'},
-                    {'name': 'Mean Returns', 'id': 'Mean Returns'},
-                    {'name': 'Sharpe Ratio', 'id': 'Sharpe Ratio'}]
+                for i in top_bottom_indices
+            ]
 
-            return (data, columns)
-        return [], []
+            columns = [
+                {'name': 'Simulation', 'id': 'Simulation'},
+                {'name': 'Final Portfolio Value', 'id': 'Final Portfolio Value'},
+                {'name': 'VaR, CVaR', 'id': 'VaR, CVaR'},
+                {'name': 'Sigma', 'id': 'Sigma'},
+                {'name': 'Sharpe Ratio', 'id': 'Sharpe Ratio'}
+            ]
+
+            fig = ff.create_distplot([final_values], ['Portfolio Values'], 
+                                    bin_size=[(np.max(final_values) - np.min(final_values)) / 200], 
+                                    show_hist=True, show_rug=False, curve_type='kde')
+            
+            mean_value = np.mean(final_values)
+            std_dev = np.std(final_values)
+            median_value = np.median(final_values)
+
+            fig.update_layout(
+                title='Distribution of Final Portfolio Values',
+                xaxis_title='Final Portfolio Value',
+                yaxis_title='Density',
+                plot_bgcolor='white', 
+                annotations=[
+                    dict(
+                        x=mean_value,
+                        y=0,
+                        xref="x",
+                        yref="paper",
+                        text="Mean: {:.2f}".format(mean_value),
+                        showarrow=True,
+                        arrowhead=1,
+                        ax=0,
+                        ay=-90
+                    ),
+                    dict(
+                        x=median_value,
+                        y=0,
+                        xref="x",
+                        yref="paper",
+                        text="Median: {:.2f}".format(median_value),
+                        showarrow=True,
+                        arrowhead=1,
+                        ax=0,
+                        ay=-60
+                    ),
+                    dict(
+                        x=mean_value + std_dev,
+                        y=0,
+                        xref="x",
+                        yref="paper",
+                        text="+1 Z Score: {:.2f}".format(mean_value + std_dev),
+                        showarrow=True,
+                        arrowhead=1,
+                        ax=0,
+                        ay=-80
+                    ),
+                    dict(
+                        x=mean_value - std_dev,
+                        y=0,
+                        xref="x",
+                        yref="paper",
+                        text="-1 Z Score: {:.2f}".format(mean_value - std_dev),
+                        showarrow=True,
+                        arrowhead=1,
+                        ax=0,
+                        ay=-100
+                    )
+                ]
+            )
+
+            return (data, columns, fig)
+
+        return ([], [], go.Figure())
+
+
+
