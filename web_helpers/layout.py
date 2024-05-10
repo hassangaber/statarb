@@ -4,8 +4,47 @@ from dash import dcc, html, dash_table
 def export_layout(df:pd.DataFrame) -> html.Div:
     
     return html.Div([
-        html.H1("Quantitative Strategies Dashboard: Hassan Seeking Alpha"),
-        dcc.Tabs(id="tabs", children=[
+        html.H1("Quantitative Strategies Dashboard: Seeking Alpha"),
+            dcc.Tabs(id="tabs", children=[
+                dcc.Tab(label='Introduction', children=[
+                html.Div([
+                    html.H1('Hassan Gaber', style={'color': '#2c3e50'}),
+                    html.P(
+                        'Welcome to my personal project site where I explore automated quantitative trading strategies, '
+                        'demonstrating the process of strategy development and backtesting with the objective of maximizing excess returns.',
+                        style={'margin': '20px 0'}
+                    ),
+                    html.Div([
+                        html.H4('Experience', style={'color': '#34495e'}),
+                        html.P('Data Scientist Intern at PSP Investments (January 2023 – April 2024)', style={'font-weight': 'bold'}),
+                        html.Ul([
+                            html.Li('Supported alpha generation team managing $8.5B with predictive analytics.'),
+                            html.Li('Developed feature selector improving trading returns in derivatives markets.'),
+                        ], style={'list-style-type': 'square', 'padding-left': '20px'}),
+                        html.P('Data Scientist Intern at National Bank of Canada (May 2022 – August 2022)', style={'font-weight': 'bold'}),
+                        html.Ul([
+                            html.Li('Patented and created automatic data drift detection tool saving over $765k annually.'),
+                            html.Li('Developed drift detection framework with PyTorch, AWS Sagemaker, OpenCV.')
+                        ], style={'list-style-type': 'square', 'padding-left': '20px'}),
+                        html.P('Research Assistant - Data Scientist at McGill University Health Center (September 2021 – August 2022)', style={'font-weight': 'bold'}),
+                        html.Ul([
+                            html.Li('Innovated data computing scheme to speed up website load times by 5-fold.'),
+                            html.Li('Developed visualization methods to find new gene relationships in chronic lung diseases.'),
+                        ], style={'list-style-type': 'square', 'padding-left': '20px'}),
+                    ], style={'padding': '10px'}),
+                    html.Div([
+                        html.H4('Education', style={'color': '#34495e'}),
+                        html.P('Bachelor of Engineering, Electrical Engineering, McGill University (September 2019 – April 2024)'),
+                    ], style={'padding': '10px','font-weight': 'bold'}),
+                    html.Div([
+                    html.A("LinkedIn Profile", href="https://www.linkedin.com/in/hassansgaber/", 
+                           target="_blank", style={'margin-right': '15px', 'color': '#0077B5'}),
+
+                    html.A("GitHub Profile", href="https://github.com/hassangaber", 
+                           target="_blank", style={'color': '#333'})
+                ], style={'padding': '10px', 'font-size': '64px'})
+                ], style={'padding': '20px', 'font-size':'32px'}),
+            ]),
             
             # Analysis Tab
             dcc.Tab(label='Analyze Time Series', children=[
