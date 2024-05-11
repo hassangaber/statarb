@@ -6,36 +6,49 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler
 from torch.utils.data import DataLoader, TensorDataset
 
-data = pd.read_csv('../assets/data.csv')
-data.fillna(0, inplace=True) 
-data['DATE'] = pd.to_datetime(data['DATE'])
-data = data[data['ID'] == 'AAPL']
-data = data[data['DATE'] > '2017-01-01'].loc[data.DATE < '2023-01-01']
+data = pd.read_csv("../assets/data.csv")
+data.fillna(0, inplace=True)
+data["DATE"] = pd.to_datetime(data["DATE"])
+data = data[data["ID"] == "AAPL"]
+data = data[data["DATE"] > "2017-01-01"].loc[data.DATE < "2023-01-01"]
 
 features = data
 # Calculate future returns for a horizon, e.g., 5 days
 future_period = 5
-data['future_return'] = data['CLOSE'].shift(-future_period) / data['CLOSE'] - 1
+data["future_return"] = data["CLOSE"].shift(-future_period) / data["CLOSE"] - 1
 data.dropna(inplace=True)  # Drop last rows with no future return data
 
-targets = data[['DATE','future_return']]
+targets = data[["DATE", "future_return"]]
 
-X_train, X_valid = features[features.DATE < '2022-01-01'].values, features[features.DATE >= '2022-02-01'].values
-y_train, y_valid = targets[targets.DATE < '2022-01-01'].values, targets[targets.DATE >= '2022-02-01'].values
-print(X_train[0,3:])
+X_train, X_valid = (
+    features[features.DATE < "2022-01-01"].values,
+    features[features.DATE >= "2022-02-01"].values,
+)
+y_train, y_valid = (
+    targets[targets.DATE < "2022-01-01"].values,
+    targets[targets.DATE >= "2022-02-01"].values,
+)
+print(X_train[0, 3:])
 
 scaler = StandardScaler()
-X_train = scaler.fit_transform(X_train[:,3:])
-X_valid = scaler.fit_transform(X_valid[:,3:])
+X_train = scaler.fit_transform(X_train[:, 3:])
+X_valid = scaler.fit_transform(X_valid[:, 3:])
 
-print(type(y_train[:,1][0]))
+print(type(y_train[:, 1][0]))
 
 # Convert to PyTorch tensors
-train_dataset = TensorDataset(torch.tensor(X_train, dtype=torch.float), torch.tensor(y_train[:,1].astype(float), dtype=torch.float))
-valid_dataset = TensorDataset(torch.tensor(X_valid, dtype=torch.float), torch.tensor(y_valid[:,1].astype(float), dtype=torch.float))
+train_dataset = TensorDataset(
+    torch.tensor(X_train, dtype=torch.float),
+    torch.tensor(y_train[:, 1].astype(float), dtype=torch.float),
+)
+valid_dataset = TensorDataset(
+    torch.tensor(X_valid, dtype=torch.float),
+    torch.tensor(y_valid[:, 1].astype(float), dtype=torch.float),
+)
 
 train_loader = DataLoader(train_dataset, batch_size=32, shuffle=False)
 valid_loader = DataLoader(valid_dataset, batch_size=32, shuffle=False)
+
 
 # Define the model
 class Regressor(nn.Module):
@@ -50,17 +63,30 @@ class Regressor(nn.Module):
         x = torch.relu(self.layer2(x))
         return self.output(x)
 
+
 model = Regressor()
 optimizer = optim.Adam(model.parameters(), lr=3e-4)
 
+
 # Custom loss function: Profit-Loss Maximization
-def custom_loss(outputs, targets, transaction_cost=0.001, risk_free_rate=0.041, annual_trading_days=252):
+def custom_loss(
+    outputs,
+    targets,
+    transaction_cost=0.001,
+    risk_free_rate=0.041,
+    annual_trading_days=252,
+):
     profit = 100 * (targets - transaction_cost) * outputs
     profit_volatility = torch.std(profit)
     mean_profit = torch.mean(profit)
-    sharpe_ratio = (mean_profit - risk_free_rate) / profit_volatility * torch.sqrt(torch.tensor(annual_trading_days))
+    sharpe_ratio = (
+        (mean_profit - risk_free_rate)
+        / profit_volatility
+        * torch.sqrt(torch.tensor(annual_trading_days))
+    )
 
     return -sharpe_ratio  # Minimize negative Sharpe Ratio
+
 
 # Training function
 def train(model, train_loader, valid_loader, optimizer, epochs=100):
@@ -74,8 +100,10 @@ def train(model, train_loader, valid_loader, optimizer, epochs=100):
             loss.backward()
             optimizer.step()
             total_loss += loss.item()
-        print(f'Epoch {epoch+1}/{epochs}, Training Loss: {total_loss / len(train_loader)}')
-        
+        print(
+            f"Epoch {epoch+1}/{epochs}, Training Loss: {total_loss / len(train_loader)}"
+        )
+
         # Validation phase
         model.eval()
         with torch.no_grad():
@@ -84,7 +112,8 @@ def train(model, train_loader, valid_loader, optimizer, epochs=100):
                 predictions = model(features).squeeze()
                 loss = custom_loss(predictions, returns)
                 valid_loss += loss.item()
-            print(f'Validation Loss: {valid_loss / len(valid_loader)}')
+            print(f"Validation Loss: {valid_loss / len(valid_loader)}")
+
 
 # Run training and validation
 if __name__ == "__main__":

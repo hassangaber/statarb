@@ -3,6 +3,7 @@ import pandas as pd
 
 import sklearn
 
-class Strategies():
+
+class Strategies:
     def __init__(self) -> None:
         pass
