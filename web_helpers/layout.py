@@ -372,31 +372,18 @@ def export_layout(df: pd.DataFrame) -> html.Div:
                     dcc.Tab(
                         label="Backtest with ML Models",
                         children=[
-                            html.Div(
-                                [
-                                    dcc.Input(
-                                        id="stock-input",
-                                        type="text",
-                                        placeholder="Enter stock ID",
-                                        value="NFLX",
-                                    ),
-                                    dcc.Input(
-                                        id="start-date-input",
-                                        type="text",
-                                        placeholder="Enter start date (YYYY-MM-DD)",
-                                        value="2020-03-01",
-                                    ),
-                                    dcc.Input(
-                                        id="end-date-input",
-                                        type="text",
-                                        placeholder="Enter end date (YYYY-MM-DD)",
-                                        value="2020-07-16",
-                                    ),
-                                    html.Button(
-                                        "Submit", id="submit-button", n_clicks=0
-                                    ),
-                                ]
-                            ),
+                        html.Div([
+                            dcc.Input(id='stock-id-input', type='text', placeholder='Enter Stock ID'),
+                            dcc.Input(id='train-end-date-input', type='text', placeholder='Enter Train End Date'),
+                            dcc.Input(id='test-start-date-input', type='text', placeholder='Enter Test Start Date'),
+                            dcc.Input(id='start-date-input', type='text', placeholder='Enter Start Date'),
+                            html.Button('Run Model', id='run-model-button'),
+                            dcc.Store(id='stored-data'),  # Store for model data
+                            dcc.Graph(id='portfolio-value-graph'),
+                            dcc.Graph(id='transaction-signals-graph'),
+                            html.Div(id='table-container')
+                        ])
+
                         ],
                     ),
                     # Backtesting with Indictors Tab

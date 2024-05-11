@@ -3,13 +3,15 @@ import pandas as pd
 import datetime as dt
 
 import dash
-from dash import callback_context, html
+from dash import callback_context, html, dash_table
 from dash.dependencies import Input, Output, State
 import plotly.figure_factory as ff
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
 
-from src.compute import compute_signal, getData, breakout_probabilities
+from network.basic_rf import PortfolioPrediction
+
+from src.compute import compute_signal, getData
 from src.monteCarlo import MC
 from web_helpers.utils import random_color, kde_scipy
 
@@ -596,3 +598,68 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
                 ]
             )
         return "Please run the simulation and set a target value to calculate metrics."
+
+    @app.callback(
+    Output('stored-data', 'data'),
+    Input('run-model-button', 'n_clicks'),
+    State('stock-id-input', 'value'),
+    State('train-end-date-input', 'value'),
+    State('test-start-date-input', 'value'),
+    State('start-date-input', 'value')
+    )
+    def handle_model_training(n_clicks, stock_id, train_end_date, test_start_date, start_date):
+        if n_clicks is None or not all([stock_id, train_end_date, test_start_date, start_date]):
+            # If inputs are not provided or button hasn't been clicked, do not update
+            return dash.no_update
+
+        # Assume PortfolioPrediction is a class you have defined to handle your model
+        model = PortfolioPrediction('assets/data.csv', stock_id, train_end_date, test_start_date, start_date)
+        model.preprocess_data()
+        model.train()
+        action_df = model.backtest()
+        
+        # Store the DataFrame in JSON format in dcc.Store
+        return action_df.to_json(date_format='iso', orient='split')
+
+    @app.callback(
+        [
+            Output('portfolio-value-graph', 'figure'),
+            Output('transaction-signals-graph', 'figure'),
+            Output('table-container', 'children')
+        ],
+        Input('stored-data', 'data')
+    )
+    def update_output(data_json):
+        if not data_json:
+            # If no data, return empty states
+            empty_fig = go.Figure()
+            empty_fig.update_layout(title="No data to display", xaxis=dict(showgrid=False), yaxis=dict(showgrid=False))
+            return empty_fig, empty_fig, "Enter parameters and click 'Run Model'"
+
+        action_df = pd.read_json(data_json, orient='split')
+
+        # Create a table from the DataFrame
+        data_table = dash_table.DataTable(
+            data=action_df.to_dict('records'),
+            columns=[{"name": i, "id": i} for i in action_df.columns],
+            style_table={'overflowX': 'auto'}
+        )
+
+        # Generate portfolio value graph
+        portfolio_value_fig = go.Figure(
+            data=[go.Scatter(x=action_df['DATE'], y=action_df['portfolio_value'], mode='lines+markers', name='Portfolio Value')],
+            layout=go.Layout(title='Portfolio Value Over Time', xaxis_title='Date', yaxis_title='Value')
+        )
+
+        # Generate transaction signals graph
+        transaction_signals_fig = go.Figure(
+            data=[
+                go.Scatter(x=action_df['DATE'], y=action_df['CLOSE'], mode='lines', name='Close Price'),
+                go.Scatter(x=action_df[action_df['predicted_signal'] == 1]['DATE'], y=action_df[action_df['predicted_signal'] == 1]['CLOSE'], mode='markers', marker=dict(color='green', size=10), name='Buy Signal'),
+                go.Scatter(x=action_df[action_df['predicted_signal'] == 2]['DATE'], y=action_df[action_df['predicted_signal'] == 2]['CLOSE'], mode='markers', marker=dict(color='red', size=10), name='Sell Signal')
+            ],
+            layout=go.Layout(title='Transaction Signals Over Time', xaxis_title='Date', yaxis_title='Close Price')
+        )
+
+        return portfolio_value_fig, transaction_signals_fig, data_table
+
