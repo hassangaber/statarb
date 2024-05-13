@@ -2,8 +2,8 @@
 import pandas as pd
 import dash
 
-from web_helpers.layout import export_layout
-from web_helpers.callbacks import register_callbacks
+from api.web_helpers.layout import export_layout
+from api.web_helpers.callbacks import register_callbacks
 
 df = pd.read_csv("assets/data.csv")
 df.DATE = pd.to_datetime(df.DATE)

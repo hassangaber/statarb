@@ -1,45 +1,13 @@
 import pandas as pd
-import numpy as np
 import torch
 from torch.utils.data import DataLoader, TensorDataset
-import torch.nn as nn
-import torch.nn.functional as F
 from sklearn.preprocessing import StandardScaler
+
+from networklib.optimize import VolatilityWeightedLoss
+from networklib.model import StockModel
 
 pd.options.display.float_format = "{:,.2f}".format
 
-
-class VolatilityWeightedLoss(nn.Module):
-    def __init__(self):
-        super(VolatilityWeightedLoss, self).__init__()
-
-    def forward(self, predictions: torch.Tensor, targets: torch.Tensor, volatility: torch.Tensor) -> torch.Tensor:
-        penalty=0.3
-
-        predictions = predictions.squeeze()
-        targets=targets.float()
-        base_loss = F.binary_cross_entropy(predictions, targets)
-        volatility_penalty = volatility.mean() * base_loss
-
-        return (1-penalty)*base_loss + penalty*volatility_penalty
-
-class StockModel(nn.Module):
-
-    def __init__(
-        self, in_features: int = 4, hidden_1: int = 64, hidden_2: int = 32, out: int = 1
-    ):
-
-        super(StockModel, self).__init__()
-
-        self.fc1 = nn.Linear(in_features, hidden_1)
-        self.fc2 = nn.Linear(hidden_1, hidden_2)
-        self.fc3 = nn.Linear(hidden_2, out)
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        x = self.fc3(x)
-        return torch.sigmoid(x)
 
 class PortfolioPrediction:
     def __init__(

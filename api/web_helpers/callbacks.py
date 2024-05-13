@@ -10,11 +10,11 @@ import plotly.figure_factory as ff
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
 
-from network.basic_rf import PortfolioPrediction
+from api.network.basic_rf import PortfolioPrediction
 
-from src.compute import compute_signal, getData
-from src.monteCarlo import MC
-from web_helpers.utils import random_color, kde_scipy
+from api.src.compute import compute_signal, getData
+from api.src.monteCarlo import MC
+from api.web_helpers.utils import random_color, kde_scipy
 
 
 def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
@@ -601,20 +601,20 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
         return "Please run the simulation and set a target value to calculate metrics."
 
     @app.callback(
-        Output("stored-data", "data"),
-        Input("run-model-button", "n_clicks"),
-        [
-            State("stock-id-input", "value"),
-            State("train-end-date-input", "value"),
-            State("test-start-date-input", "value"),
-            State("start-date-input", "value"),
-            State("batch-size-input", "value"),
-            State("epochs-input", "value"),
-            State("learning-rate-input", "value"),
-            State("weight-decay-input", "value"),
-            State("initial-investment-input", "value"),
-            State("share-volume-input", "value")
-        ]
+    Output("stored-data", "data"),
+    Input("run-model-button", "n_clicks"),
+    [
+    State("stock-id-input", "value"),
+    State("train-end-date-input", "value"),
+    State("test-start-date-input", "value"),
+    State("start-date-input", "value"),
+    State("batch-size-input", "value"),
+    State("epochs-input", "value"),
+    State("learning-rate-input", "value"),
+    State("weight-decay-input", "value"),
+    State("initial-investment-input", "value"),
+    State("share-volume-input", "value")
+    ]
     )
     def handle_model_training(n_clicks, stock_id, train_end_date, test_start_date, start_date, batch_size, epochs, lr, weight_decay, initial_investment, share_volume):
         if n_clicks is None or not all([stock_id, train_end_date, test_start_date, start_date, batch_size, epochs, lr, weight_decay, initial_investment, share_volume]):
@@ -703,7 +703,7 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
         formatted_df['POSITION'] = np.where(formatted_df['no_position']==1, 'NO POSITION', formatted_df['POSITION'])
 
         formatted_df = formatted_df[['DATE','POSITION','cumulative_shares','portfolio_value','CLOSE','RETURNS','alpha']]
-        
+
         data_table = dash_table.DataTable(
             data=formatted_df.reset_index().to_dict('records'),
             columns=[{"name": i, "id": i} for i in formatted_df.columns],
