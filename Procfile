@@ -1,1 +1,1 @@
-web: gunicorn qstrat:server
+web: gunicorn --preload qstrat:server

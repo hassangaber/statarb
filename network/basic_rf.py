@@ -26,7 +26,7 @@ class VolatilityWeightedLoss(nn.Module):
 class StockModel(nn.Module):
 
     def __init__(
-        self, in_features: int = 12, hidden_1: int = 128, hidden_2: int = 64, out: int = 1
+        self, in_features: int = 4, hidden_1: int = 64, hidden_2: int = 32, out: int = 1
     ):
 
         super(StockModel, self).__init__()
@@ -85,11 +85,7 @@ class PortfolioPrediction:
 
         self.df["target"] = (self.df["RETURNS"] > 0).astype(int).values
 
-        features = ["CLOSE", "VOLATILITY_90D", "VOLUME", "HIGH", 'CLOSE_SMA_3D', 'CLOSE_EWMA_3D','VOLATILITY_90D_SMA_3D','VOLATILITY_90D_EWMA_3D',
-                    'CLOSE_SMA_21D',
-                    'CLOSE_EWMA_21D',
-                    'VOLATILITY_90D_SMA_21D',
-                    'VOLATILITY_90D_EWMA_21D',]
+        features = ["CLOSE", "VOLATILITY_90D", "VOLUME", "HIGH"]
 
         train_df = self.df[self.df["DATE"] <= self.train_end_date]
         test_df = self.df[self.df["DATE"] >= self.test_start_date]
