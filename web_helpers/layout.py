@@ -372,18 +372,42 @@ def export_layout(df: pd.DataFrame) -> html.Div:
                     dcc.Tab(
                         label="Backtest with ML Models",
                         children=[
-                        html.Div([
-                            dcc.Input(id='stock-id-input', type='text', placeholder='Enter Stock ID'),
-                            dcc.Input(id='train-end-date-input', type='text', placeholder='Enter Train End Date'),
-                            dcc.Input(id='test-start-date-input', type='text', placeholder='Enter Test Start Date'),
-                            dcc.Input(id='start-date-input', type='text', placeholder='Enter Start Date'),
-                            html.Button('Run Model', id='run-model-button'),
-                            dcc.Store(id='stored-data'),  # Store for model data
-                            dcc.Graph(id='portfolio-value-graph'),
-                            dcc.Graph(id='transaction-signals-graph'),
-                            html.Div(id='table-container')
-                        ])
+                            html.Div([
+                                html.H3("Stock and Date Selection"),
+                                html.Div([
+                                    html.Label('Stock ID: '),
+                                    dcc.Input(id="stock-id-input", type="text", value="NVDA", style={'margin-right': '10px'}),
+                                    html.Label('Train End Date: '),
+                                    dcc.Input(id="train-end-date-input", type="text", value="2023-12-30", style={'margin-right': '10px'}),
+                                    html.Label('Test Start Date: '),
+                                    dcc.Input(id="test-start-date-input", type="text", value="2024-01-01", style={'margin-right': '10px'}),
+                                    html.Label('Start Date: '),
+                                    dcc.Input(id="start-date-input", type="text", value="2023-01-01"),
+                                ], style={'margin-bottom': '20px'}),
 
+                                html.H3("Model Parameters"),
+                                html.Div([
+                                    html.Label('Batch Size: '),
+                                    dcc.Input(id="batch-size-input", type="number", value=32, style={'margin-right': '10px'}),
+                                    html.Label('Epochs: '),
+                                    dcc.Input(id="epochs-input", type="number", value=500, style={'margin-right': '10px'}),
+                                    html.Label('Learning Rate: '),
+                                    dcc.Input(id="learning-rate-input", type="number", value=0.001, style={'margin-right': '10px'}),
+                                    html.Label('Weight Decay: '),
+                                    dcc.Input(id="weight-decay-input", type="number", value=0.0001, style={'margin-right': '10px'}),
+                                    html.Label('Initial Investment: '),
+                                    dcc.Input(id="initial-investment-input", type="number", value=10000, style={'margin-right': '10px'}),
+                                    html.Label('Share Volume: '),
+                                    dcc.Input(id="share-volume-input", type="number", value=5),
+                                ], style={'margin-bottom': '20px'}),
+
+                                dcc.Store(id="stored-data"),  # Store for model data
+                                html.Button("Run Model", id="run-model-button", style={'margin-bottom': '20px'}),
+                                dcc.Graph(id="portfolio-value-graph"),
+                                dcc.Graph(id="transaction-signals-graph"),
+                                html.Div(id="table-container"),
+                                html.A("Download CSV", id="download-link", download="portfolio_data.csv", href="", target="_blank")
+                            ])
                         ],
                     ),
                     # Backtesting with Indictors Tab
