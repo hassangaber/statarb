@@ -3,8 +3,8 @@ import torch
 from torch.utils.data import DataLoader, TensorDataset
 from sklearn.preprocessing import StandardScaler
 
-from networklib.optimize import VolatilityWeightedLoss
-from networklib.model import StockModel
+from optimize import VolatilityWeightedLoss
+from model import StockModel
 
 pd.options.display.float_format = "{:,.2f}".format
 
@@ -56,17 +56,17 @@ class PortfolioPrediction:
         features = ["CLOSE", "VOLATILITY_90D", "VOLUME", "HIGH"]
 
         train_df = self.df[self.df["DATE"] <= self.train_end_date]
-        test_df = self.df[self.df["DATE"] >= self.test_start_date]
+        #test_df = self.df[self.df["DATE"] >= self.test_start_date]
 
         self.scaler.fit(train_df[features])
         train_df[features] = self.scaler.transform(train_df[features])
-        test_df[features] = self.scaler.transform(test_df[features])
+        #test_df[features] = self.scaler.transform(test_df[features])
 
         self.X_train = train_df[features].values
         self.y_train = train_df["target"].values
 
-        self.X_test = test_df[features].values
-        self.y_test = test_df["target"].values
+        #self.X_test = test_df[features].values
+        #self.y_test = test_df["target"].values
 
         self.volatility_train = train_df["VOLATILITY_90D"].values 
 
@@ -77,12 +77,12 @@ class PortfolioPrediction:
             torch.tensor(self.y_train, dtype=torch.long),
             torch.tensor(self.volatility_train, dtype=torch.float),
         )
-
+        train_data
         self.train_loader = DataLoader(train_data, batch_size=self.batch_size, shuffle=False)
 
         return self.train_loader
 
-    def train(self) -> None:
+    def train(self) -> torch.nn.Module:
         self.model = StockModel()
         criterion = VolatilityWeightedLoss()
         optimizer = torch.optim.Adam(self.model.parameters(), lr=self.lr, weight_decay=self.weight_decay)
@@ -93,12 +93,15 @@ class PortfolioPrediction:
         for epoch in range(self.epochs):
             for data, targets, volatility in self.train_loader:
                 data = data.float()
+                
                 optimizer.zero_grad()
                 outputs = self.model(data)
                 loss = criterion(outputs, targets, volatility)
                 loss.backward()
                 optimizer.step()
             print(f"Epoch {epoch+1}/{self.epochs}, Loss: {loss.item()}")
+
+        return self.model
 
     def backtest(self) -> pd.DataFrame:
         self.portfolio = (
@@ -172,3 +175,73 @@ class PortfolioPrediction:
                                 "cumulative_share_cost",
                                 "portfolio_value",
                                 "alpha",]]
+
+import torch
+import torch.onnx
+
+def convert_pytorch_to_onnx(model, input_size=(64,4), onnx_file_path='../assets/model.onnx'):
+    # Set the model to evaluation mode
+    model.eval()
+
+    # An example input you would normally provide to your model's forward() method.
+    example_input = torch.randn(input_size)
+
+    # Export the model
+    torch.onnx.export(model,               # model being run
+                      example_input,       # model input (or a tuple for multiple inputs)
+                      onnx_file_path,      # where to save the model (can be a file or file-like object)
+                      export_params=True,  # store the trained parameter weights inside the model file
+                      opset_version=10,    # the ONNX version to export the model to
+                      do_constant_folding=True,  # whether to execute constant folding for optimization
+                      input_names=['input'],   # the model's input names
+                      output_names=['output'],  # the model's output names
+                      dynamic_axes={'input': {0: 'batch_size'},  # variable length axes
+                                    'output': {0: 'batch_size'}})
+    print(f"Model has been converted to ONNX and saved to {onnx_file_path}")
+
+
+import onnxruntime as ort
+import numpy as np
+
+def run_inference_onnx(model_path, input_data):
+    # Create an inference session
+    sess = ort.InferenceSession(model_path)
+
+    if not isinstance(input_data, np.ndarray):
+        input_data = np.array(input_data)
+    if len(input_data.shape) == 1:
+        input_data = np.expand_dims(input_data, axis=0) 
+
+    # Prepare the input to the model according to the expected model inputs.
+    input_name = sess.get_inputs()[0].name
+    #input_data = input_data.dtype(np.float32)  # Ensure correct data type
+
+    # Run the model and get the output
+    result = sess.run(None, {input_name: input_data})
+    return result[0]
+
+
+if __name__ == "__main__":
+    P = PortfolioPrediction(
+        filename='../assets/data.csv',
+        stock_id='AAPL',
+        train_end_date='2024-01-01',
+        test_start_date='2024-02-1',
+        start_date='2011-01-01',
+        batch_size=64,
+        epochs=600,
+        lr=3e-4,
+        weight_decay=0.0001
+    )
+
+    P.preprocess_data()
+    T = P.make_tensor_dataloader()
+    MODEL = P.train()
+    convert_pytorch_to_onnx(MODEL)
+
+    for data, targets, volatility in T:
+        R = run_inference_onnx(model_path='../assets/model.onnx',input_data=data.float())
+        break
+
+    print(R)
+    

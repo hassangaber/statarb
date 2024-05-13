@@ -629,11 +629,11 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
 
         model = PortfolioPrediction(
             "assets/data.csv", stock_id, train_end_date, test_start_date, start_date,
-            batch_size=batch_size, epochs=epochs, lr=lr, weight_decay=weight_decay,
+            #batch_size=batch_size, epochs=epochs, lr=lr, weight_decay=weight_decay,
             initial_investment=initial_investment, share_volume=share_volume
         )
         model.preprocess_data()
-        model.train()
+        #model.train()
         action_df = model.backtest()
 
         return action_df.to_json(date_format="iso", orient="split")

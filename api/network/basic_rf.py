@@ -1,43 +1,26 @@
 import pandas as pd
-import torch
-from torch.utils.data import DataLoader, TensorDataset
+
 from sklearn.preprocessing import StandardScaler
-import torch.nn.functional as F
-import torch.nn as nn
 
+import onnxruntime as ort
+import numpy as np
 
-class VolatilityWeightedLoss(nn.Module):
-    def __init__(self):
-        super(VolatilityWeightedLoss, self).__init__()
+def run_inference_onnx(model_path, input_data):
+    # Create an inference session
+    sess = ort.InferenceSession(model_path)
 
-    def forward(self, predictions: torch.Tensor, targets: torch.Tensor, volatility: torch.Tensor) -> torch.Tensor:
-        penalty=0.3
+    if not isinstance(input_data, np.ndarray):
+        input_data = np.array(input_data)
+    if len(input_data.shape) == 1:
+        input_data = np.expand_dims(input_data, axis=0) 
 
-        predictions = predictions.squeeze()
-        targets=targets.float()
-        base_loss = F.binary_cross_entropy(predictions, targets)
-        volatility_penalty = volatility.mean() * base_loss
+    # Prepare the input to the model according to the expected model inputs.
+    input_name = sess.get_inputs()[0].name
+    #input_data = input_data.dtype(np.float32)  # Ensure correct data type
 
-        return (1-penalty)*base_loss + penalty*volatility_penalty
-
-
-class StockModel(nn.Module):
-
-    def __init__(
-        self, in_features: int = 4, hidden_1: int = 64, hidden_2: int = 32, out: int = 1
-    ):
-
-        super(StockModel, self).__init__()
-
-        self.fc1 = nn.Linear(in_features, hidden_1)
-        self.fc2 = nn.Linear(hidden_1, hidden_2)
-        self.fc3 = nn.Linear(hidden_2, out)
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        x = self.fc3(x)
-        return torch.sigmoid(x)
+    # Run the model and get the output
+    result = sess.run(None, {input_name: input_data})
+    return result[0]
 
 pd.options.display.float_format = "{:,.2f}".format
 
@@ -50,10 +33,10 @@ class PortfolioPrediction:
         train_end_date: str,
         test_start_date: str,
         start_date: str,
-        batch_size: int = 16,
-        epochs: int = 50,
-        lr: int = 0.01,
-        weight_decay: float = 0.0001,
+        # batch_size: int = 16,
+        # epochs: int = 50,
+        # lr: int = 0.01,
+        # weight_decay: float = 0.0001,
         initial_investment: int = 10000,
         share_volume: int = 5,
     ):
@@ -72,10 +55,10 @@ class PortfolioPrediction:
         self.portfolio = pd.DataFrame()
         self.scaler = StandardScaler().set_output(transform="pandas")
 
-        self.batch_size = batch_size
-        self.epochs = epochs
-        self.lr = lr
-        self.weight_decay = weight_decay
+        # self.batch_size = batch_size
+        # self.epochs = epochs
+        # self.lr = lr
+        # self.weight_decay = weight_decay
         self.initial_investment = initial_investment
         self.share_volume = share_volume
 
@@ -103,35 +86,37 @@ class PortfolioPrediction:
 
         self.volatility_train = train_df["VOLATILITY_90D"].values 
 
-    def make_tensor_dataloader(self) -> DataLoader:
+        return self.X_test
 
-        train_data = TensorDataset(
-            torch.tensor(self.X_train, dtype=torch.float),
-            torch.tensor(self.y_train, dtype=torch.long),
-            torch.tensor(self.volatility_train, dtype=torch.float),
-        )
+    # def make_tensor_dataloader(self) -> DataLoader:
 
-        self.train_loader = DataLoader(train_data, batch_size=self.batch_size, shuffle=False)
+    #     train_data = TensorDataset(
+    #         torch.tensor(self.X_train, dtype=torch.float),
+    #         torch.tensor(self.y_train, dtype=torch.long),
+    #         torch.tensor(self.volatility_train, dtype=torch.float),
+    #     )
 
-        return self.train_loader
+    #     self.train_loader = DataLoader(train_data, batch_size=self.batch_size, shuffle=False)
 
-    def train(self) -> None:
-        self.model = StockModel()
-        criterion = VolatilityWeightedLoss()
-        optimizer = torch.optim.Adam(self.model.parameters(), lr=self.lr, weight_decay=self.weight_decay)
+    #     return self.train_loader
 
-        self.make_tensor_dataloader()
+    # def train(self) -> None:
+    #     self.model = StockModel()
+    #     criterion = VolatilityWeightedLoss()
+    #     optimizer = torch.optim.Adam(self.model.parameters(), lr=self.lr, weight_decay=self.weight_decay)
 
-        self.model.train()
-        for epoch in range(self.epochs):
-            for data, targets, volatility in self.train_loader:
-                data = data.float()
-                optimizer.zero_grad()
-                outputs = self.model(data)
-                loss = criterion(outputs, targets, volatility)
-                loss.backward()
-                optimizer.step()
-            print(f"Epoch {epoch+1}/{self.epochs}, Loss: {loss.item()}")
+    #     self.make_tensor_dataloader()
+
+    #     self.model.train()
+    #     for epoch in range(self.epochs):
+    #         for data, targets, volatility in self.train_loader:
+    #             data = data.float()
+    #             optimizer.zero_grad()
+    #             outputs = self.model(data)
+    #             loss = criterion(outputs, targets, volatility)
+    #             loss.backward()
+    #             optimizer.step()
+    #         print(f"Epoch {epoch+1}/{self.epochs}, Loss: {loss.item()}")
 
     def backtest(self) -> pd.DataFrame:
         self.portfolio = (
@@ -142,12 +127,13 @@ class PortfolioPrediction:
         self.portfolio.sort_values(by="DATE", inplace=True)
         self.portfolio.reset_index(drop=True, inplace=True)
 
-        test_data_tensor = torch.tensor(self.X_test, dtype=torch.float)
-        self.model.eval()
-        with torch.no_grad():
-            predicted_probabilities = self.model(test_data_tensor)
+        # test_data_tensor = torch.tensor(self.X_test, dtype=torch.float)
+        # self.model.eval()
+        # with torch.no_grad():
+        predicted_probabilities = run_inference_onnx('assets/model.onnx',self.X_test.astype(np.float32))
 
-        self.portfolio["predicted_signal"] = (predicted_probabilities > 0.5).int() 
+        print(predicted_probabilities)
+        self.portfolio["predicted_signal"] = (predicted_probabilities > 0.5)
         self.portfolio["p_buy"] = predicted_probabilities  # Probability of buy
         self.portfolio["p_sell"] = 1-predicted_probabilities  # Probability of sell
 
