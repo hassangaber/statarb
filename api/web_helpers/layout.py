@@ -389,49 +389,7 @@ def export_layout(df: pd.DataFrame) -> html.Div:
                                     html.Label('Share Volume: '),
                                     dcc.Input(id="share-volume-input", type="number", value=5),
                                 ], style={'margin-bottom': '20px'}),
-                                html.H3("Mathematical Explanation"),
-                                dash_dangerously_set_inner_html.DangerouslySetInnerHTML('''
-                                    <h4>Model and Loss Function</h4>
-                                    <p>The model used is a neural network with the following structure:</p>
-                                    <p>\\[
-                                    \\begin{align*}
-                                    \\text{Layer 1:} & \\quad \\text{Input} \\rightarrow \\text{ReLU}(W_1 \\cdot \\text{Input} + b_1) \\\\
-                                    \\text{Layer 2:} & \\quad \\text{ReLU}(W_2 \\cdot \\text{Layer 1 Output} + b_2) \\\\
-                                    \\text{Output Layer:} & \\quad \\sigma(W_3 \\cdot \\text{Layer 2 Output} + b_3)
-                                    \\end{align*}
-                                    \\]</p>
-                                    <p>where \\(\\sigma\\) is the sigmoid activation function.</p>
-
-                                    <h4>Volatility Weighted Loss Function</h4>
-                                    <p>The custom loss function is defined as:</p>
-                                    <p>\\[
-                                    L = \\text{BCE}(\\hat{y}, y) + \\lambda \\cdot \\text{Mean}((\\hat{y} - y) \\cdot \\text{volatility})
-                                    \\]</p>
-                                    <p>where:</p>
-                                    <ul>
-                                        <li>\\(\\text{BCE}(\\hat{y}, y)\\) is the binary cross-entropy loss between predictions \\(\\hat{y}\\) and targets \\(y\\).</li>
-                                        <li>\\(\\lambda\\) is a weighting factor.</li>
-                                        <li>The second term penalizes large deviations between predictions and targets, scaled by volatility.</li>
-                                    </ul>
-
-                                    <h4>Price Over Time</h4>
-                                    <p>The price of the stock over time is represented as:</p>
-                                    <p>\\[
-                                    P_t = P_{t-1} + \\Delta P
-                                    \\]</p>
-                                    <p>where \\(\\Delta P\\) is the change in price at time \\(t\\).</p>
-
-                                    <h4>Target Definition</h4>
-                                    <p>The target variable is defined as:</p>
-                                    <p>\\[
-                                    y_t = 
-                                    \\begin{cases} 
-                                    1 & \\text{if } R_t > 0 \\\\
-                                    0 & \\text{if } R_t \\leq 0 
-                                    \\end{cases}
-                                    \\]</p>
-                                    <p>where \\(R_t\\) is the return at time \\(t\\).</p>
-                                '''),
+                                
                                 dcc.Store(id="stored-data"),  # Store for model data
                                 html.Button("Run Model", id="run-model-button", style={'margin-bottom': '20px'}),
                                 dcc.Graph(id="portfolio-value-graph"),
@@ -441,6 +399,7 @@ def export_layout(df: pd.DataFrame) -> html.Div:
                             ])
                         ],
                     ),
+                    dcc.Tab(label='Theory', children=[html.Img(src="/assets/theory.png", style={'height':'75%','width': '80%'}),]),
                     # Backtesting with Indictors Tab
                     dcc.Tab(
                         label="Backtest with Indictors",

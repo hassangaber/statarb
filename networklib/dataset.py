@@ -41,6 +41,7 @@ class TimeSeriesDataset(Dataset):
         features = torch.tensor(row[self.features].values, dtype=torch.float)
         target = torch.tensor(row['target'], dtype=torch.float)
         volatility = torch.tensor(row['VOLATILITY_90D'], dtype=torch.float)
+
         return features, target, volatility
 
 

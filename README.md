@@ -39,6 +39,14 @@ $$
 
 where  $\sigma (W^{T} x+b)$  is the sigmoid activation function.
 
+### Price Over Time
+
+The price of the stock over time is represented as:
+
+$P_t = P_{t-1} + \Delta P$
+
+where $\Delta P$ is the change in price at time $t$.
+
 ### Volatility Weighted Loss
 
 The custom loss function is defined as:
@@ -51,6 +59,20 @@ where:
 -  $\text{BCE}(\hat{y}, y)$  is the binary cross-entropy loss between predictions  $\hat{y}$  and targets  $y$ .
 -  $\lambda$  is a weighting factor.
 - The second term penalizes large deviations between predictions and targets, scaled by volatility.
+### Target Definition
+
+The target variable is defined as:
+
+$$
+y_t = 
+\begin{cases}  
+1 & \text{if } R_t > 0 \\
+0 & \text{if } R_t \leq 0 
+\end{cases}
+$$
+
+
+where $R_t$ is the return at time $t$.
 
 ## Monte Carlo Simulation
 
