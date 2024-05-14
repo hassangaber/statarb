@@ -377,12 +377,12 @@ def export_layout(df: pd.DataFrame) -> html.Div:
                                 html.Div([
                                     html.Label('Stock ID: '),
                                     dcc.Input(id="stock-id-input", type="text", value="NVDA", style={'margin-right': '10px'}),
-                                    html.Label('Train End Date: '),
-                                    dcc.Input(id="train-end-date-input", type="text", value="2023-12-30", style={'margin-right': '10px'}),
-                                    html.Label('Test Start Date: '),
-                                    dcc.Input(id="test-start-date-input", type="text", value="2024-01-01", style={'margin-right': '10px'}),
-                                    html.Label('Start Date: '),
-                                    dcc.Input(id="start-date-input", type="text", value="2023-01-01"),
+                                    # html.Label('Train End Date: '),
+                                    # dcc.Input(id="train-end-date-input", type="text", value="2023-12-30", style={'margin-right': '10px'}),
+                                    html.Label('Test Start Date: (AFTER 2024-01-01)'),
+                                    dcc.Input(id="test-start-date-input", type="text", value="2024-01-02", style={'margin-right': '10px'}),
+                                    # html.Label('Start Date: '),
+                                    # dcc.Input(id="start-date-input", type="text", value="2023-01-01"),
                                 ], style={'margin-bottom': '20px'}),
 
                                 html.H3("Model Parameters"),

@@ -600,9 +600,9 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
     Input("run-model-button", "n_clicks"),
     [
     State("stock-id-input", "value"),
-    State("train-end-date-input", "value"),
+    #State("train-end-date-input", "value"),
     State("test-start-date-input", "value"),
-    State("start-date-input", "value"),
+    #State("start-date-input", "value"),
     # State("batch-size-input", "value"),
     # State("epochs-input", "value"),
     # State("learning-rate-input", "value"),
@@ -611,10 +611,16 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
     State("share-volume-input", "value")
     ]
     )
-    def handle_model_training(n_clicks, stock_id, train_end_date, test_start_date, start_date, 
+    def handle_model_training(n_clicks, stock_id, 
+                              #train_end_date, 
+                              test_start_date, 
+                              #start_date, 
                               #batch_size, epochs, lr, weight_decay, 
                               initial_investment, share_volume):
-        if n_clicks is None or not all([stock_id, train_end_date, test_start_date, start_date, 
+        if n_clicks is None or not all([stock_id, 
+                                        #train_end_date, 
+                                        test_start_date, 
+                                        #start_date, 
                                         #batch_size, epochs, lr, weight_decay, 
                                         initial_investment, share_volume]):
             return dash.no_update
@@ -627,7 +633,10 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
         share_volume = int(share_volume)
 
         model = PortfolioPrediction(
-            "assets/data.csv", stock_id, train_end_date, test_start_date, start_date,
+            "assets/data.csv", stock_id, 
+            #train_end_date, 
+            test_start_date=test_start_date, 
+            #start_date,
             #batch_size=batch_size, epochs=epochs, lr=lr, weight_decay=weight_decay,
             initial_investment=initial_investment, share_volume=share_volume
         )

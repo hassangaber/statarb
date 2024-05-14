@@ -32,9 +32,9 @@ class PortfolioPrediction:
         self,
         filename: str,
         stock_id: str,
-        train_end_date: str,
         test_start_date: str,
-        start_date: str,
+        train_end_date: str='2024-01-01',
+        start_date: str = "2015-01-01",
         initial_investment: int = 10000,
         share_volume: int = 5,
     ):
@@ -79,7 +79,7 @@ class PortfolioPrediction:
 
         self.df["target"] = (self.df["RETURNS"] > 0).astype(int).values
 
-        features = ["CLOSE", "VOLATILITY_90D", "VOLUME", "HIGH"]
+        features = ["CLOSE", "VOLATILITY_90D", "VOLUME", "HIGH", "CLOSE_ROC_3D", "CLOSE_EWMA_120D"]
 
         train_df = self.df[self.df["DATE"] <= self.train_end_date]
         test_df = self.df[self.df["DATE"] >= self.test_start_date]
