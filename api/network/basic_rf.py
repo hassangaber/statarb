@@ -114,62 +114,74 @@ class PortfolioPrediction:
         self.portfolio.reset_index(drop=True, inplace=True)
 
         predicted_probabilities = run_inference_onnx('assets/model.onnx', self.X_test.astype(np.float32))
+        self.portfolio["predicted_signal"] = (predicted_probabilities > 0.5).astype(int)
+        self.portfolio["p_buy"] = predicted_probabilities
+        self.portfolio["p_sell"] = 1 - predicted_probabilities
 
-        self.portfolio["predicted_signal"] = (predicted_probabilities > 0.5)
-        self.portfolio["p_buy"] = predicted_probabilities  # Probability of buy
-        self.portfolio["p_sell"] = 1 - predicted_probabilities  # Probability of sell
+        # Initialize self.portfolio columns
+        self.portfolio["cash_on_hand"] = self.initial_investment
+        self.portfolio["share_value"] = 0
+        self.portfolio["total_portfolio_value"] = self.initial_investment
+        self.portfolio["cumulative_shares"] = 0
+        self.portfolio["PnL"] = 0.0
+        self.portfolio["position"] = "no position"
 
-        self.portfolio["portfolio_value"] = self.initial_investment
-        self.portfolio["cumulative_shares"] = 0  # Initialize cumulative shares column
-        self.portfolio["cumulative_share_cost"] = 0
-        number_of_shares = 0
-        cumulative_share_cost = 0  # Total cost of shares held
+        def update_portfolio(row, previous_row):
+            close_price = row["CLOSE"]
+            signal = row["predicted_signal"]
+            probability = row["p_buy"]
+            
+            # Hold if probability is between 45% and 55%
+            if 0.45 <= probability <= 0.55:
+                row["cumulative_shares"] = previous_row["cumulative_shares"]
+                row["cash_on_hand"] = previous_row["cash_on_hand"]
+                row["share_value"] = row["cumulative_shares"] * close_price
+                row["total_portfolio_value"] = row["cash_on_hand"] + row["share_value"]
+                row["PnL"] = row["total_portfolio_value"] - self.initial_investment
+                row["position"] = "hold"
+                return row
+            
+            if signal:  # Buy signal
+                shares_bought = min(self.share_volume, row["cash_on_hand"] // close_price)
+                if shares_bought > 0:
+                    row["cumulative_shares"] = previous_row["cumulative_shares"] + shares_bought
+                    row["cash_on_hand"] = previous_row["cash_on_hand"] - shares_bought * close_price
+                    row["share_value"] = row["cumulative_shares"] * close_price
+                    row["total_portfolio_value"] = row["cash_on_hand"] + row["share_value"]
+                    row["PnL"] = row["total_portfolio_value"] - self.initial_investment
+                    row["position"] = "buy"
+                else:
+                    row["position"] = "hold"
+            
+            else:  # Sell signal
+                shares_sold = min(self.share_volume, previous_row["cumulative_shares"])
+                if shares_sold > 0:
+                    row["cumulative_shares"] = previous_row["cumulative_shares"] - shares_sold
+                    row["cash_on_hand"] = previous_row["cash_on_hand"] + shares_sold * close_price
+                    row["share_value"] = row["cumulative_shares"] * close_price
+                    row["total_portfolio_value"] = row["cash_on_hand"] + row["share_value"]
+                    row["PnL"] = row["total_portfolio_value"] - self.initial_investment
+                    row["position"] = "sell"
+                else:
+                    row["position"] = "hold"
 
-        for i, row in self.portfolio.iterrows():
-            if i == 0:
-                continue
+            # Update position to hold if no shares bought or sold
+            if row["cumulative_shares"] == previous_row["cumulative_shares"]:
+                row["position"] = "hold"
+            
+            return row
 
-            if (
-                row["predicted_signal"] == 1
-                and self.portfolio.at[i - 1, "portfolio_value"]
-                > row["CLOSE"] * self.share_volume
-            ):
-                # Buy shares
-                number_of_shares += self.share_volume
-                purchase_cost = row["CLOSE"] * self.share_volume
-                self.portfolio.at[i, "portfolio_value"] -= purchase_cost
-                cumulative_share_cost += purchase_cost
+        # Initialize the first row based on initial investment
+        self.portfolio.iloc[0] = update_portfolio(self.portfolio.iloc[0], self.portfolio.iloc[0])
 
-            elif row["predicted_signal"] == 0 and number_of_shares >= self.share_volume:
-                # Sell shares
-                number_of_shares -= self.share_volume
-                sale_proceeds = row["CLOSE"] * self.share_volume
-                self.portfolio.at[i, "portfolio_value"] += sale_proceeds
-                cumulative_share_cost -= row["CLOSE"] * self.share_volume
+        # Iterate through the DataFrame to update each row
+        for i in range(1, len(self.portfolio)):
+            self.portfolio.iloc[i] = update_portfolio(self.portfolio.iloc[i], self.portfolio.iloc[i - 1])
 
-            # Update cumulative share and cost tracking
-            self.portfolio.at[i, "cumulative_shares"] = number_of_shares
-            self.portfolio.at[i, "cumulative_share_cost"] = cumulative_share_cost
+        print(self.portfolio)
 
-            # Update portfolio value for current market value of shares
-            if number_of_shares > 0:
-                current_market_value = number_of_shares * row["CLOSE"]
-                self.portfolio.at[i, "portfolio_value"] += (
-                    current_market_value - cumulative_share_cost
-                )
+        # Return the relevant columns
+        result = self.portfolio[['DATE', 'CLOSE', 'cash_on_hand', 'share_value', "total_portfolio_value", "position", "cumulative_shares", "PnL", "predicted_signal"]]
+        print(result)
 
-            # Calculate alpha as difference between portfolio return and benchmark return
-            if i > 0:
-                portfolio_daily_return = (self.portfolio.at[i, "portfolio_value"] / self.portfolio.at[0, "portfolio_value"] - 1)
-                self.portfolio.at[i, "alpha"] = round(portfolio_daily_return, 3)  # - benchmark_daily_return
-
-        return self.portfolio[["DATE",
-                               "CLOSE",
-                               "RETURNS",
-                               "p_buy",
-                               "p_sell",
-                               "predicted_signal",
-                               "cumulative_shares",
-                               "cumulative_share_cost",
-                               "portfolio_value",
-                               "alpha"]]
+        return result

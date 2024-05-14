@@ -118,7 +118,7 @@ def export_layout(df: pd.DataFrame) -> html.Div:
                                         style={"padding": "10px", "font-size": "64px"},
                                     ),
                                 ],
-                                style={"padding": "20px", "font-size": "32px"},
+                                style={"padding": "20px", "font-size": "30px"},
                             ),
                         ],
                     ),
@@ -371,11 +371,26 @@ def export_layout(df: pd.DataFrame) -> html.Div:
                     dcc.Tab(
                         label="Backtest with ML Models",
                         children=[
+                            html.P("Here you can backtest a trading streategy one stock at a time with variable initial investments and transaction share volume. \
+                                    The signals given also show the alpha of the portfolio. The foundational model was trained on all data from 2010-01-01 to 2023-12-28. \
+                                    So to generate real signals with no look-ahead bias please select a date after the last train observation date. Currently, the model is simple \
+                                    and the target is stochastic which can be viewed in more detail in the Theory tab.", style={"font-size": "24px"},),
+                            html.Hr(),
                             html.Div([
                                 html.H3("Stock and Date Selection"),
                                 html.Div([
                                     html.Label('Stock ID: '),
-                                    dcc.Input(id="stock-id-input", type="text", value="NVDA", style={'margin-right': '10px'}),
+                                    dcc.Dropdown(
+                                        id="stock-id-input",
+                                        options=[
+                                            {"label": i, "value": i}
+                                            for i in df.ID.unique()
+                                        ],
+                                        value="AAPL",
+                                        multi=False,
+                                        placeholder="Select stock to backtest",
+                                    ),
+                                    #dcc.Input(id="stock-id-input", type="text", value="NVDA", style={'margin-right': '10px'}),
                                     html.Label('Test Start Date: (AFTER 2024-01-01)'),
                                     dcc.Input(id="test-start-date-input", type="text", value="2024-01-02", style={'margin-right': '10px'}),
                                 ], style={'margin-bottom': '20px'}),

@@ -665,23 +665,23 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
         action_df.DATE = pd.to_datetime(action_df.DATE)
         action_df.set_index("DATE", inplace=True)
 
-        weeklyPortfolio = action_df.resample('W').last()
-        weeklyPortfolio['RETURNS'] = action_df['RETURNS'].resample('W').mean()
-        weeklyPortfolio['alpha'] = action_df['alpha'].resample('W').mean()
-        weeklyPortfolio['cumulative_shares'] = action_df['cumulative_shares'].resample('W').sum()
-        weeklyPortfolio['cumulative_share_cost'] = action_df['cumulative_share_cost'].resample('W').sum()
-        weeklyPortfolio['portfolio_value'] = action_df['portfolio_value'].resample('W').mean()
+        # weeklyPortfolio = action_df.resample('W').last()
+        # weeklyPortfolio['RETURNS'] = action_df['RETURNS'].resample('W').mean()
+        # weeklyPortfolio['alpha'] = action_df['alpha'].resample('W').mean()
+        # weeklyPortfolio['cumulative_shares'] = action_df['cumulative_shares'].resample('W').sum()
+        # weeklyPortfolio['cumulative_share_cost'] = action_df['cumulative_share_cost'].resample('W').sum()
+        # weeklyPortfolio['portfolio_value'] = action_df['portfolio_value'].resample('W').mean()
 
-        weeklyPortfolio['mean_p_buy'] = action_df['p_buy'].resample('W').mean()
-        weeklyPortfolio['mean_p_sell'] = action_df['p_sell'].resample('W').mean()
+        # weeklyPortfolio['mean_p_buy'] = action_df['p_buy'].resample('W').mean()
+        # weeklyPortfolio['mean_p_sell'] = action_df['p_sell'].resample('W').mean()
         
-        weeklyPortfolio.reset_index(inplace=True)
-        action_df.reset_index(inplace=True)
+        # weeklyPortfolio.reset_index(inplace=True)
+        # action_df.reset_index(inplace=True)
 
-        weeklyPortfolio = weeklyPortfolio[['DATE','CLOSE','RETURNS','mean_p_buy','mean_p_sell','cumulative_shares','cumulative_share_cost','portfolio_value']]
+        #weeklyPortfolio = weeklyPortfolio[['DATE','CLOSE','RETURNS','mean_p_buy','mean_p_sell','cash_on_hand','cumulative_shares','cumulative_share_cost','portfolio_value']]
         
         portfolio_value_fig = go.Figure(
-            data=[go.Scatter(x=action_df.index, y=action_df['portfolio_value'], mode='lines+markers', name='Portfolio Value')],
+            data=[go.Scatter(x=action_df.index, y=action_df['total_portfolio_value'], mode='lines+markers', name='Portfolio Value')],
             layout=go.Layout(title='Portfolio Value Over Time', xaxis_title='Date', yaxis_title='Portfolio Value')
         )
 
@@ -706,11 +706,11 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
         # Apply this formatting function
         formatted_df = format_floats(action_df.copy())
 
-        formatted_df['no_position'] = np.where((formatted_df['predicted_signal'] == 0) & (formatted_df['cumulative_shares'] == 0), 1, 0)
-        formatted_df['POSITION'] = np.where((formatted_df['predicted_signal'] == 1), 'BUY','SELL')
-        formatted_df['POSITION'] = np.where(formatted_df['no_position']==1, 'NO POSITION', formatted_df['POSITION'])
+        # formatted_df['no_position'] = np.where((formatted_df['predicted_signal'] == 0) & (formatted_df['cumulative_shares'] == 0), 1, 0)
+        # formatted_df['POSITION'] = np.where((formatted_df['predicted_signal'] == 1), 'BUY','SELL')
+        # formatted_df['POSITION'] = np.where(formatted_df['no_position']==1, 'NO POSITION', formatted_df['POSITION'])
 
-        formatted_df = formatted_df[['DATE','POSITION','cumulative_shares','portfolio_value','CLOSE','RETURNS','alpha']]
+        #formatted_df = formatted_df[['DATE','POSITION','cumulative_shares','total_portfolio_value','cash_on_hand','PnL','CLOSE','RETURNS','alpha']]
 
         data_table = dash_table.DataTable(
             data=formatted_df.reset_index().to_dict('records'),
