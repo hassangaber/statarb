@@ -1,18 +1,24 @@
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torch
-
 
 class VolatilityWeightedLoss(nn.Module):
     def __init__(self):
         super(VolatilityWeightedLoss, self).__init__()
 
     def forward(self, predictions: torch.Tensor, targets: torch.Tensor, volatility: torch.Tensor) -> torch.Tensor:
-        penalty=0.3
-
         predictions = predictions.squeeze()
-        targets=targets.float()
-        base_loss = F.binary_cross_entropy(predictions, targets)
-        volatility_penalty = volatility.mean() * base_loss
+        targets = targets.float()
 
-        return (1-penalty)*base_loss + penalty*volatility_penalty
+        # Binary Cross Entropy loss for classification with dynamic weighting
+        weight = 1 + volatility
+        base_loss = F.binary_cross_entropy(predictions, targets)
+
+        # Penalize large deviations, scaled by volatility
+        deviation_penalty = ((predictions - targets).abs() * volatility).mean()
+
+        # Total loss combining base loss and deviation penalty
+        total_loss = base_loss + deviation_penalty
+
+        return base_loss
+

@@ -1,29 +1,31 @@
 import pandas as pd
-
-from sklearn.preprocessing import StandardScaler
-
-import onnxruntime as ort
 import numpy as np
+from sklearn.preprocessing import StandardScaler
+import onnxruntime as ort
 
-def run_inference_onnx(model_path, input_data):
-    # Create an inference session
+def run_inference_onnx(model_path: str, input_data: np.ndarray) -> np.ndarray:
+    """
+    Run inference on an ONNX model.
+
+    Parameters:
+        model_path (str): Path to the ONNX model.
+        input_data (np.ndarray): Input data for the model.
+
+    Returns:
+        np.ndarray: Model predictions.
+    """
     sess = ort.InferenceSession(model_path)
 
     if not isinstance(input_data, np.ndarray):
         input_data = np.array(input_data)
     if len(input_data.shape) == 1:
-        input_data = np.expand_dims(input_data, axis=0) 
+        input_data = np.expand_dims(input_data, axis=0)
 
-    # Prepare the input to the model according to the expected model inputs.
     input_name = sess.get_inputs()[0].name
-    #input_data = input_data.dtype(np.float32)  # Ensure correct data type
-
-    # Run the model and get the output
-    result = sess.run(None, {input_name: input_data})
+    result = sess.run(None, {input_name: input_data.astype(np.float32)})
     return result[0]
 
 pd.options.display.float_format = "{:,.2f}".format
-
 
 class PortfolioPrediction:
     def __init__(
@@ -33,14 +35,21 @@ class PortfolioPrediction:
         train_end_date: str,
         test_start_date: str,
         start_date: str,
-        # batch_size: int = 16,
-        # epochs: int = 50,
-        # lr: int = 0.01,
-        # weight_decay: float = 0.0001,
         initial_investment: int = 10000,
         share_volume: int = 5,
     ):
+        """
+        Initialize PortfolioPrediction object.
 
+        Parameters:
+            filename (str): Path to CSV file with stock data.
+            stock_id (str): Stock ID to filter the data.
+            train_end_date (str): End date for the training period.
+            test_start_date (str): Start date for the test period.
+            start_date (str): Start date for filtering the data.
+            initial_investment (int): Initial investment amount.
+            share_volume (int): Number of shares to buy/sell per transaction.
+        """
         self.df = pd.read_csv(filename)
         self.df["DATE"] = pd.to_datetime(self.df["DATE"])
         self.df.sort_values("DATE", inplace=True)
@@ -53,17 +62,18 @@ class PortfolioPrediction:
         self.model = None
         self.train_loader = None
         self.portfolio = pd.DataFrame()
-        self.scaler = StandardScaler().set_output(transform="pandas")
+        self.scaler = StandardScaler().set_output(transform='pandas')
 
-        # self.batch_size = batch_size
-        # self.epochs = epochs
-        # self.lr = lr
-        # self.weight_decay = weight_decay
         self.initial_investment = initial_investment
         self.share_volume = share_volume
 
-    def preprocess_data(self) -> None:
+    def preprocess_data(self) -> np.ndarray:
+        """
+        Preprocess the data for training and testing.
 
+        Returns:
+            np.ndarray: Test set features.
+        """
         self.df = self.df[(self.df.ID == self.stock_id) & (self.df.DATE >= self.start_date)].sort_values('DATE')
         self.df.dropna(inplace=True)
 
@@ -88,37 +98,13 @@ class PortfolioPrediction:
 
         return self.X_test
 
-    # def make_tensor_dataloader(self) -> DataLoader:
-
-    #     train_data = TensorDataset(
-    #         torch.tensor(self.X_train, dtype=torch.float),
-    #         torch.tensor(self.y_train, dtype=torch.long),
-    #         torch.tensor(self.volatility_train, dtype=torch.float),
-    #     )
-
-    #     self.train_loader = DataLoader(train_data, batch_size=self.batch_size, shuffle=False)
-
-    #     return self.train_loader
-
-    # def train(self) -> None:
-    #     self.model = StockModel()
-    #     criterion = VolatilityWeightedLoss()
-    #     optimizer = torch.optim.Adam(self.model.parameters(), lr=self.lr, weight_decay=self.weight_decay)
-
-    #     self.make_tensor_dataloader()
-
-    #     self.model.train()
-    #     for epoch in range(self.epochs):
-    #         for data, targets, volatility in self.train_loader:
-    #             data = data.float()
-    #             optimizer.zero_grad()
-    #             outputs = self.model(data)
-    #             loss = criterion(outputs, targets, volatility)
-    #             loss.backward()
-    #             optimizer.step()
-    #         print(f"Epoch {epoch+1}/{self.epochs}, Loss: {loss.item()}")
-
     def backtest(self) -> pd.DataFrame:
+        """
+        Backtest the model and calculate portfolio performance.
+
+        Returns:
+            pd.DataFrame: Portfolio performance metrics.
+        """
         self.portfolio = (
             self.df[["DATE", "CLOSE", "RETURNS"]]
             .loc[self.df["DATE"] >= self.test_start_date]
@@ -127,15 +113,11 @@ class PortfolioPrediction:
         self.portfolio.sort_values(by="DATE", inplace=True)
         self.portfolio.reset_index(drop=True, inplace=True)
 
-        # test_data_tensor = torch.tensor(self.X_test, dtype=torch.float)
-        # self.model.eval()
-        # with torch.no_grad():
-        predicted_probabilities = run_inference_onnx('assets/model.onnx',self.X_test.astype(np.float32))
+        predicted_probabilities = run_inference_onnx('assets/model.onnx', self.X_test.astype(np.float32))
 
-        print(predicted_probabilities)
         self.portfolio["predicted_signal"] = (predicted_probabilities > 0.5)
         self.portfolio["p_buy"] = predicted_probabilities  # Probability of buy
-        self.portfolio["p_sell"] = 1-predicted_probabilities  # Probability of sell
+        self.portfolio["p_sell"] = 1 - predicted_probabilities  # Probability of sell
 
         self.portfolio["portfolio_value"] = self.initial_investment
         self.portfolio["cumulative_shares"] = 0  # Initialize cumulative shares column
@@ -179,15 +161,15 @@ class PortfolioPrediction:
             # Calculate alpha as difference between portfolio return and benchmark return
             if i > 0:
                 portfolio_daily_return = (self.portfolio.at[i, "portfolio_value"] / self.portfolio.at[0, "portfolio_value"] - 1)
-                self.portfolio.at[i, "alpha"] = round(portfolio_daily_return,3) # - benchmark_daily_return
+                self.portfolio.at[i, "alpha"] = round(portfolio_daily_return, 3)  # - benchmark_daily_return
 
         return self.portfolio[["DATE",
-                                "CLOSE",
-                                "RETURNS",
-                                "p_buy",
-                                "p_sell",
-                                "predicted_signal",
-                                "cumulative_shares",
-                                "cumulative_share_cost",
-                                "portfolio_value",
-                                "alpha",]]
+                               "CLOSE",
+                               "RETURNS",
+                               "p_buy",
+                               "p_sell",
+                               "predicted_signal",
+                               "cumulative_shares",
+                               "cumulative_share_cost",
+                               "portfolio_value",
+                               "alpha"]]

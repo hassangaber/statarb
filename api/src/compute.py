@@ -2,15 +2,6 @@ import pandas as pd
 import numpy as np
 
 
-def breakout_probabilities(
-    portfolio_sims: np.array, upper_limit: float, lower_limit: float
-) -> tuple[float, float]:
-    """Calculate the probabilities of breaking out above an upper limit or below a lower limit."""
-    total_sims = portfolio_sims.shape[0]
-    upper_breakouts = np.sum(portfolio_sims.max(axis=0) > upper_limit)
-    lower_breakouts = np.sum(portfolio_sims.min(axis=0) < lower_limit)
-    return (upper_breakouts / total_sims, lower_breakouts / total_sims)
-
 
 def compute_signal(M: pd.DataFrame, strategy: str = "momentum") -> pd.DataFrame:
     if strategy == "momentum":

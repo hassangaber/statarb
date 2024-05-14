@@ -551,14 +551,14 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
         return ([], [], go.Figure())
 
     @app.callback(
-        Output("optimal-metrics-output", "children"),
-        [Input("calculate-metrics-button", "n_clicks")],
-        [
-            State("target-value-input", "value"),
-            State("monte-carlo-simulation-graph", "figure"),
-            State("weights-input", "value"),
-            State("initial-portfolio-input", "value"),
-        ],
+    Output("optimal-metrics-output", "children"),
+    [Input("calculate-metrics-button", "n_clicks")],
+    [
+        State("target-value-input", "value"),
+        State("monte-carlo-simulation-graph", "figure"),
+        State("weights-input", "value"),
+        State("initial-portfolio-input", "value"),
+    ],
     )
     def update_optimal_metrics(
         n_clicks, target_value, simulation_figure, weights, initial_portfolio
@@ -576,19 +576,13 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
             for sim in portfolio_sims.T:
                 valid_periods = np.where(sim >= breakout_above)[0]
                 if valid_periods.size > 0:
-                    holding_periods.append(
-                        valid_periods[0]
-                    )  # Get the first index where the condition is met
-                upper_breakouts.append(np.sum(sim > breakout_above))
-                lower_breakouts.append(np.sum(sim < breakout_below))
+                    holding_periods.append(valid_periods[0])  # Get the first index where the condition is met
+                upper_breakouts.append(np.max(sim))
+                lower_breakouts.append(np.min(sim))
 
-            if holding_periods:
-                optimal_holding_period = np.max(holding_periods)
-            else:
-                optimal_holding_period = "Target not reached in any simulation"
-
-            upper_prob = np.mean(upper_breakouts) / len(portfolio_sims[0])
-            lower_prob = np.mean(lower_breakouts) / len(portfolio_sims[0])
+            optimal_holding_period = np.max(holding_periods) if holding_periods else "Target not reached in any simulation"
+            upper_prob = np.sum(np.array(upper_breakouts) > breakout_above) / len(portfolio_sims.T)
+            lower_prob = np.sum(np.array(lower_breakouts) < breakout_below) / len(portfolio_sims.T)
 
             return html.Div(
                 [
@@ -600,6 +594,7 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
             )
         return "Please run the simulation and set a target value to calculate metrics."
 
+
     @app.callback(
     Output("stored-data", "data"),
     Input("run-model-button", "n_clicks"),
@@ -608,22 +603,26 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
     State("train-end-date-input", "value"),
     State("test-start-date-input", "value"),
     State("start-date-input", "value"),
-    State("batch-size-input", "value"),
-    State("epochs-input", "value"),
-    State("learning-rate-input", "value"),
-    State("weight-decay-input", "value"),
+    # State("batch-size-input", "value"),
+    # State("epochs-input", "value"),
+    # State("learning-rate-input", "value"),
+    # State("weight-decay-input", "value"),
     State("initial-investment-input", "value"),
     State("share-volume-input", "value")
     ]
     )
-    def handle_model_training(n_clicks, stock_id, train_end_date, test_start_date, start_date, batch_size, epochs, lr, weight_decay, initial_investment, share_volume):
-        if n_clicks is None or not all([stock_id, train_end_date, test_start_date, start_date, batch_size, epochs, lr, weight_decay, initial_investment, share_volume]):
+    def handle_model_training(n_clicks, stock_id, train_end_date, test_start_date, start_date, 
+                              #batch_size, epochs, lr, weight_decay, 
+                              initial_investment, share_volume):
+        if n_clicks is None or not all([stock_id, train_end_date, test_start_date, start_date, 
+                                        #batch_size, epochs, lr, weight_decay, 
+                                        initial_investment, share_volume]):
             return dash.no_update
 
-        batch_size = int(batch_size)
-        epochs = int(epochs)
-        lr = float(lr)
-        weight_decay = float(weight_decay)
+        # batch_size = int(batch_size)
+        # epochs = int(epochs)
+        # lr = float(lr)
+        # weight_decay = float(weight_decay)
         initial_investment = int(initial_investment)
         share_volume = int(share_volume)
 
