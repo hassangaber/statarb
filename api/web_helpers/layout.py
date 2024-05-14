@@ -1,7 +1,5 @@
 import pandas as pd
 from dash import dcc, html, dash_table
-import dash_dangerously_set_inner_html
-
 
 def export_layout(df: pd.DataFrame) -> html.Div:
 
