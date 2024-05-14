@@ -37,19 +37,19 @@ $$
 \end{align*}
 $$
 
-where \( \sigma \) is the sigmoid activation function.
+where  $\sigma (W^{T} x+b)$  is the sigmoid activation function.
 
 ### Volatility Weighted Loss
 
 The custom loss function is defined as:
 
 $$
-L = \text{BCE}(\hat{y}, y) + \lambda \cdot \text{Mean}((\hat{y} - y) \cdot \text{volatility})
+L(\hat{y}, y) = \text{BCE}(\hat{y}, y) + \lambda \cdot \text{Mean}((\hat{y} - y) \cdot \text{volatility})
 $$
 
 where:
-- \( \text{BCE}(\hat{y}, y) \) is the binary cross-entropy loss between predictions \( \hat{y} \) and targets \( y \).
-- \( \lambda \) is a weighting factor.
+-  $\text{BCE}(\hat{y}, y)$  is the binary cross-entropy loss between predictions  $\hat{y}$  and targets  $y$ .
+-  $\lambda$  is a weighting factor.
 - The second term penalizes large deviations between predictions and targets, scaled by volatility.
 
 ## Monte Carlo Simulation
@@ -58,21 +58,11 @@ Monte Carlo simulations are used to project the future performance of investment
 
 ### Monte Carlo Simulation
 
-1. Generate random variables 
-   $$Z \sim N(0, 1)$$
-2. Calculate the Cholesky decomposition of the covariance matrix 
-   $$ L $$
-3. Compute daily returns:
-   
-   $$
-   \text{dailyReturns} = \mu + L \cdot Z
-   $$
+1. Generate random variables  $Z \sim N(0, 1)$
+2. Calculate the Cholesky decomposition of the covariance matrix $L$ 
+3. Compute daily returns: $\text{dailyReturns} = \mu + L \cdot Z$
 
-4. Compute portfolio values:
-
-   $$
-   \text{portfolioValues} = \text{initialPortfolio} \cdot \prod_{t=1}^{T} (1 + \text{dailyReturns})
-   $$
+4. Compute portfolio values: $\text{portfolioValues} = \text{initialPortfolio} \cdot \prod_{t=1}^{T} (1 + \text{dailyReturns})$
 
 5. Calculate performance metrics (e.g., Sharpe ratio, VaR, CVaR).
 
