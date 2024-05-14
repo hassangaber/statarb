@@ -1,5 +1,6 @@
 import pandas as pd
 from dash import dcc, html, dash_table
+import dash_dangerously_set_inner_html
 
 
 def export_layout(df: pd.DataFrame) -> html.Div:
@@ -377,30 +378,60 @@ def export_layout(df: pd.DataFrame) -> html.Div:
                                 html.Div([
                                     html.Label('Stock ID: '),
                                     dcc.Input(id="stock-id-input", type="text", value="NVDA", style={'margin-right': '10px'}),
-                                    # html.Label('Train End Date: '),
-                                    # dcc.Input(id="train-end-date-input", type="text", value="2023-12-30", style={'margin-right': '10px'}),
                                     html.Label('Test Start Date: (AFTER 2024-01-01)'),
                                     dcc.Input(id="test-start-date-input", type="text", value="2024-01-02", style={'margin-right': '10px'}),
-                                    # html.Label('Start Date: '),
-                                    # dcc.Input(id="start-date-input", type="text", value="2023-01-01"),
                                 ], style={'margin-bottom': '20px'}),
 
                                 html.H3("Model Parameters"),
                                 html.Div([
-                                    # html.Label('Batch Size: '),
-                                    # dcc.Input(id="batch-size-input", type="number", value=32, style={'margin-right': '10px'}),
-                                    # html.Label('Epochs: '),
-                                    # dcc.Input(id="epochs-input", type="number", value=500, style={'margin-right': '10px'}),
-                                    # html.Label('Learning Rate: '),
-                                    # dcc.Input(id="learning-rate-input", type="number", value=0.001, style={'margin-right': '10px'}),
-                                    # html.Label('Weight Decay: '),
-                                    # dcc.Input(id="weight-decay-input", type="number", value=0.0001, style={'margin-right': '10px'}),
                                     html.Label('Initial Investment: '),
                                     dcc.Input(id="initial-investment-input", type="number", value=10000, style={'margin-right': '10px'}),
                                     html.Label('Share Volume: '),
                                     dcc.Input(id="share-volume-input", type="number", value=5),
                                 ], style={'margin-bottom': '20px'}),
+                                html.H3("Mathematical Explanation"),
+                                dash_dangerously_set_inner_html.DangerouslySetInnerHTML('''
+                                    <h4>Model and Loss Function</h4>
+                                    <p>The model used is a neural network with the following structure:</p>
+                                    <p>$$
+                                    \\begin{align*}
+                                    \\text{Layer 1:} & \\quad \\text{Input} \\rightarrow \\text{ReLU}(W_1 \\cdot \\text{Input} + b_1) \\\\
+                                    \\text{Layer 2:} & \\quad \\text{ReLU}(W_2 \\cdot \\text{Layer 1 Output} + b_2) \\\\
+                                    \\text{Output Layer:} & \\quad \\sigma(W_3 \\cdot \\text{Layer 2 Output} + b_3)
+                                    \\end{align*}
+                                    $$</p>
+                                    <p>where \\(\\sigma\\) is the sigmoid activation function.</p>
 
+                                    <h4>Volatility Weighted Loss Function</h4>
+                                    <p>The custom loss function is defined as:</p>
+                                    <p>$$
+                                    L = \\text{BCE}(\\hat{y}, y) + \\lambda \\cdot \\text{Mean}((\\hat{y} - y) \\cdot \\text{volatility})
+                                    $$</p>
+                                    <p>where:</p>
+                                    <ul>
+                                        <li>\\(\\text{BCE}(\\hat{y}, y)\\) is the binary cross-entropy loss between predictions \\(\\hat{y}\\) and targets \\(y\\).</li>
+                                        <li>\\(\\lambda\\) is a weighting factor.</li>
+                                        <li>The second term penalizes large deviations between predictions and targets, scaled by volatility.</li>
+                                    </ul>
+
+                                    <h4>Price Over Time</h4>
+                                    <p>The price of the stock over time is represented as:</p>
+                                    <p>$$
+                                    P_t = P_{t-1} + \\Delta P
+                                    $$</p>
+                                    <p>where \\(\\Delta P\\) is the change in price at time \\(t\\).</p>
+
+                                    <h4>Target Definition</h4>
+                                    <p>The target variable is defined as:</p>
+                                    <p>$$
+                                    y_t = 
+                                    \\begin{cases} 
+                                    1 & \\text{if } R_t > 0 \\\\
+                                    0 & \\text{if } R_t \\leq 0 
+                                    \\end{cases}
+                                    $$</p>
+                                    <p>where \\(R_t\\) is the return at time \\(t\\).</p>
+                                '''),
                                 dcc.Store(id="stored-data"),  # Store for model data
                                 html.Button("Run Model", id="run-model-button", style={'margin-bottom': '20px'}),
                                 dcc.Graph(id="portfolio-value-graph"),
