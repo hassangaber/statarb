@@ -97,6 +97,7 @@ class PortfolioPrediction:
         Pr = run_inference_onnx(f'assets/{model_id}.onnx', self.X_test.astype(np.float32))
 
         self.portfolio["predicted_signal"] = (Pr > buy_probability_threshold).astype(int)
+        print(self.portfolio.predicted_signal)
         self.portfolio["p_buy"] = Pr
         self.portfolio["p_sell"] = 1 - Pr
 
@@ -109,10 +110,10 @@ class PortfolioPrediction:
         self.portfolio["position"] = "no position"
 
         # Initialize the first row based on initial investment
-        self.portfolio.iloc[0] = update_portfolio(self.portfolio.iloc[0], 
-                                                  self.portfolio.iloc[0], 
-                                                  self.initial_investment, 
-                                                  self.share_volume)
+        # self.portfolio.iloc[0] = update_portfolio(self.portfolio.iloc[0], 
+        #                                           self.portfolio.iloc[0], 
+        #                                           self.initial_investment, 
+        #                                           self.share_volume)
 
         # Iterate through the DataFrame to update each row
         for i in range(1, len(self.portfolio)):
