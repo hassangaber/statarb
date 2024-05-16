@@ -19,8 +19,8 @@ server = app.server
 
 app.layout = export_layout(df)
 
-
-@app.callback(Output("page-content", "children"), [Input("url", "pathname")])
+@app.callback(Output("page-content", "children"), 
+              [Input("url", "pathname")])
 def display_page(pathname):
     if pathname == "/":
         return render_intro()
@@ -37,10 +37,7 @@ def display_page(pathname):
     else:
         return "404 - Page not found"
 
-
 register_callbacks(app, df)
-
-
 
 if __name__ == "__main__":
     app.run_server(debug=True)

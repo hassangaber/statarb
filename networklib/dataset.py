@@ -23,13 +23,14 @@ class TimeSeriesDataset(Dataset):
         # self.target = target
         self.horizon = horizon
         self.tau = tau
-        
+
         self.scalers = {stock_id: StandardScaler().set_output(transform='pandas') for stock_id in self.stock_ids}
         self.processed_data = []
         self.preprocess()
 
     def preprocess(self):
         for stock_id in self.stock_ids:
+            
             stock_data = self.data[(self.data['ID'] == stock_id) & 
                                    (self.data['DATE'] >= self.start_date) & 
                                    (self.data['DATE'] <= self.end_date)].sort_values('DATE')

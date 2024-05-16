@@ -50,13 +50,14 @@ def render_intro():
             ),
             html.Div(
                 [
-                    html.A("LinkedIn Profile", href="https://www.linkedin.com/in/hassansgaber/", target="_blank", style={"margin-right": "15px", "color": "#0077B5"}),
+                    html.A("email", href="mailto:hassansameh90@gmail.com", target="_blank", style={"margin-right": "20px", "color": "#333"}),
+                    html.A("LinkedIn Profile", href="https://www.linkedin.com/in/hassansgaber/", target="_blank", style={"margin-right": "20px", "color": "#0077B5"}),
                     html.A("GitHub Profile", href="https://github.com/hassangaber", target="_blank", style={"color": "#333"}),
                 ],
-                style={"padding": "10px", "font-size": "24px"},
+                style={"padding": "10px", "font-size": "36px"},
             ),
         ],
-        style={"padding": "20px", "font-size": "18px"},
+        style={"padding": "20px", "font-size": "30px"},
     )
 
 def render_analyze(df):
