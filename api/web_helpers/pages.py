@@ -286,11 +286,52 @@ def render_backtest_ml(df):
                 This model is based on a neural network that tries to predict stochastic returns. Stochastic returns are inherently unpredictable, but the \
                 model aims to identify patterns and generate signals that can be used to make trading decisions. By backtesting, we can see how well the model's predictions align with actual market movements.
                 
+                # Constructing the Target for Predicting Changes in Returns
+
+                In supervised learning, labeling is necessary to train models to predict future changes in returns. This dataset class creates a target label for predicting changes in returns based on a dynamic threshold calculated from rolling volatility. The labels are classified into three categories:
+                - **1**: Change in returns greater than the positive threshold.
+                - **-1**: Change in returns less than the negative threshold.
+                - **0**: Change in returns within the threshold range.
+
+                ## Labeling Method
+
+                ### Change in Returns Calculation
+                The change in returns ($\Delta r_t$) over a specified horizon ($h$) is calculated as:
+
+                $$ 
+                \Delta r_t = r_t - r_{t-h} 
+                $$
+
+                where $r_t$ is the return at time $t$.
+
+                ### Rolling Volatility Calculation
+                Rolling volatility is computed as the square root of the sum of squared log returns over the horizon:
+
+                $$
+                V_t = \sqrt{\sum_{i=t-h+1}^{t} r_i^2} 
+                $$
+
+                ### Dynamic Threshold
+                The threshold ($T$) is defined as a multiple of the rolling volatility:
+
+                $$
+                B_t = T \cdot V_t 
+                $$
                 
-                
-                
+
+                The implementation in the `TimeSeriesDataset` class involves the following steps:
+
+                1. **Initialize the Class**: Set the parameters and prepare the data.
+
+                2. **Preprocess the Data**: Calculate changes in returns, rolling volatility, and assign labels.
+
+                3. **Scale Features**: Normalize the features using `StandardScaler`.
+
+                4. **Data Handling**: Implement methods to get the length of the dataset and retrieve individual data points.
+
+
                 """,
-                style={"font-size": "18px", "line-height": "1.6"},
+                style={"font-size": "18px", "line-height": "1.6"}, mathjax=True
             ),
             html.Hr(),
             html.Div(
