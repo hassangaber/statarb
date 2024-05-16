@@ -10,6 +10,19 @@ def render_intro():
                 "demonstrating the process of strategy development and backtesting with the objective of maximizing excess returns.",
                 style={"margin": "20px 0"},
             ),
+            html.P(
+                "I'm a new bachelor of engineering graduate with experience in data science looking to work in the Quantitative investments industry. Feel free to contact me for opportunities in data science, analytics, or quantitative development.",
+                style={"margin": "20px 0"},
+            ),
+            html.Div(
+                [
+                    html.A("email", href="mailto:hassansameh90@gmail.com", target="_blank", style={"margin-right": "25px", "color": "#333"}),
+                    html.A("cv", href="https://drive.google.com/file/d/1kgI4mUsJCdNKJEJVT10SE5xmyD6BjM0l/view?usp=sharing", target="_blank", style={"margin-right": "25px", "color": "#333"}),
+                    html.A("LinkedIn Profile", href="https://www.linkedin.com/in/hassansgaber/", target="_blank", style={"margin-right": "25px", "color": "#0077B5"}),
+                    html.A("GitHub Profile", href="https://github.com/hassangaber", target="_blank", style={"color": "#333"}),
+                ],
+                style={"padding": "10px", "font-size": "36px"},
+            ),
             html.Div(
                 [
                     html.H4("Experience", style={"color": "#34495e"}),
@@ -47,14 +60,6 @@ def render_intro():
                     html.P("Bachelor of Engineering, Electrical Engineering, McGill University (September 2019 – April 2024)")
                 ],
                 style={"padding": "10px", "font-weight": "bold"},
-            ),
-            html.Div(
-                [
-                    html.A("email", href="mailto:hassansameh90@gmail.com", target="_blank", style={"margin-right": "20px", "color": "#333"}),
-                    html.A("LinkedIn Profile", href="https://www.linkedin.com/in/hassansgaber/", target="_blank", style={"margin-right": "20px", "color": "#0077B5"}),
-                    html.A("GitHub Profile", href="https://github.com/hassangaber", target="_blank", style={"color": "#333"}),
-                ],
-                style={"padding": "10px", "font-size": "36px"},
             ),
         ],
         style={"padding": "20px", "font-size": "30px"},
