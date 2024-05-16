@@ -211,14 +211,21 @@ def render_montecarlo(df):
                             ),
                         ],
                     ),
+
+
 def render_backtest_ml(df):
     return html.Div(
         [
             html.P(
-                "Here you can backtest a trading strategy one stock at a time with variable initial investments and transaction share volume. \
-                The signals given also show the alpha of the portfolio. I use a *Naive fixed-time horizon target*. The foundational model was trained on all data from 2010-01-01 to 2023-12-28. \
-                So to generate real signals with no look-ahead bias, please select a date after the last train observation date. Currently, the model is simple and the target is stochastic, which can be viewed in more detail in the Theory tab.",
-                style={"font-size": "18px"},
+                "Here you can backtest a trading strategy one stock at a time with variable initial investments and transaction share volume. The signals given also show the alpha of the portfolio. \
+                I use a Naive fixed-time horizon target. The foundational model was trained on all data from 2010-01-01 to 2023-12-28. To generate real signals with no look-ahead bias, \
+                please select a date after the last train observation date. Currently, the model is simple and the target is stochastic, which can be viewed in more detail in the Theory tab. \
+                Backtesting allows us to evaluate the performance of a trading strategy using historical data. It helps determine if the strategy would have been profitable in the past, providing \
+                    confidence that it might perform well in the future. A good PnL (Profit and Loss) from backtesting indicates that the strategy has potential for making money when applied to live \
+                data and close prices. \
+                This model is based on a neural network that tries to predict stochastic returns. Stochastic returns are inherently unpredictable, but the \
+                model aims to identify patterns and generate signals that can be used to make trading decisions. By backtesting, we can see how well the model's predictions align with actual market movements.",
+                style={"font-size": "18px", "line-height": "1.6"},
             ),
             html.Hr(),
             html.Div(
@@ -226,47 +233,77 @@ def render_backtest_ml(df):
                     html.H3("Stock and Date Selection"),
                     html.Div(
                         [
-                            html.Label('Stock ID: '),
+                            html.Label('Stock ID:'),
+                        ],
+                        style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '10px'},
+                    ),
+                    html.Div(
+                        [
                             dcc.Dropdown(
                                 id="stock-id-input",
                                 options=[{"label": i, "value": i} for i in df.ID.unique()],
                                 value="AAPL",
                                 multi=False,
                                 placeholder="Select stock to backtest",
+                                style={'width': '48%', 'margin-right': '4%'}
                             ),
-                            html.Label('Test Start Date: (AFTER 2024-01-01)'),
-                            dcc.Input(id="test-start-date-input", type="text", value="2024-01-02", style={'margin-right': '10px'}),
+                            html.Label('TRADING START: ', style={'margin-left': '5px'}),
+                            dcc.Input(id="test-start-date-input", type="text", value="2024-01-02", style={'width': '48%'}),
                         ],
-                        style={'margin-bottom': '20px'},
+                        style={'display': 'flex', 'margin-bottom': '20px'},
                     ),
                     html.H3("Model Parameters"),
                     html.Div(
                         [
-                            html.Label('Signal Model: '),
+                            html.Label('Signal Model:'),
+                        ],
+                        style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '10px'},
+                    ),
+                    html.Div(
+                        [
                             dcc.Dropdown(
                                 id="model-id-input",
                                 options=[{"label": i, "value": i} for i in ['1_day_horizon_MLP', 'volatility_horizon_MLP']],
                                 value="1_day_horizon_MLP",
                                 multi=False,
                                 placeholder="Select model to generate trading signal",
+                                style={'width': '48%', 'margin-right': '2%'}
                             ),
-                            html.Label('Initial Investment: '),
-                            dcc.Input(id="initial-investment-input", type="number", value=10000, style={'margin-right': '10px'}),
-                            html.Label('Share Volume: '),
-                            dcc.Input(id="share-volume-input", type="number", value=5),
+                            html.Div(
+                                [
+                                    html.Label('Initial Investment:', style={'margin-left': '20px'}),
+                                    dcc.Input(id="initial-investment-input", type="text", value="10000", style={'width': '48%'}),
+                                ],
+                                style={'width': '48%', 'margin-right': '2%'},
+                            ),
+                            html.Div(
+                                [
+                                    html.Label('Share Volume:', style={'margin-left': '20px'}),
+                                    dcc.Input(id="share-volume-input", type="text", value="5", style={'width': '48%'}),
+                                ],
+                                style={'width': '48%', 'margin-right': '2%'},
+                            )
                         ],
-                        style={'margin-bottom': '20px'},
+                        style={'display': 'flex', 'margin-bottom': '20px'},
                     ),
                     dcc.Store(id="stored-data"),  # Store for model data
                     html.Button("Run Model", id="run-model-button", style={'margin-bottom': '20px'}),
-                    dcc.Graph(id="portfolio-value-graph"),
-                    dcc.Graph(id="transaction-signals-graph"),
+                    dcc.Graph(id="pnl-graph", config={'displayModeBar': False}),
+                    dcc.Graph(id="transaction-signals-graph", config={'displayModeBar': False}),
+                    dcc.Graph(id="portfolio-value-graph", config={'displayModeBar': False}),
+                    dcc.Graph(id="cash-on-hand-graph", config={'displayModeBar': False}),
+                    html.Div(id="stats-container"),
+                    dcc.Graph(id="returns-distribution-graph", config={'displayModeBar': False}),
                     html.Div(id="table-container"),
                     html.A("Download CSV", id="download-link", download="portfolio_data.csv", href="", target="_blank"),
                 ]
             ),
         ],
     )
+
+
+# Further customization of the graphs and table can be added within the callbacks or the CSS.
+
 
 def render_theory():
     return html.Div(

@@ -122,7 +122,7 @@ class PortfolioPrediction:
                                                       self.share_volume)
 
         # Return the relevant columns
-        return self.portfolio[['DATE', 'CLOSE', 'cash_on_hand', 'share_value', 
+        return self.portfolio[['DATE', 'CLOSE', 'RETURNS','cash_on_hand', 'share_value', 
                                "total_portfolio_value", "position", "cumulative_shares", 
                                "PnL", "predicted_signal"]]
         
