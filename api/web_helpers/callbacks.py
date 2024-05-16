@@ -339,15 +339,16 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
     """MONTE-CARLO CALLBACK"""
 
     @app.callback(
-        Output("monte-carlo-simulation-graph", "figure"),
-        Input("run-simulation-button", "n_clicks"),
-        State("stock-dropdown", "value"),
-        State("weights-input", "value"),
-        State("num-days-input", "value"),
-        State("initial-portfolio-input", "value"),
+    Output("monte-carlo-simulation-graph", "figure"),
+    Input("run-simulation-button", "n_clicks"),
+    State("stock-dropdown", "value"),
+    State("weights-input", "value"),
+    State("num-days-input", "value"),
+    State("initial-portfolio-input", "value"),
+    State("num-simulations-input", "value"),
     )
     def update_monte_carlo_simulation(
-        n_clicks, selected_stocks, weights, num_days, initial_portfolio
+        n_clicks, selected_stocks, weights, num_days, initial_portfolio, num_simulations
     ):
         triggered = callback_context.triggered[0]
 
@@ -363,7 +364,7 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
             )
 
             res = run_monte_carlo_simulation(
-                6, num_days, weights, meanReturns, covMatrix, initial_portfolio
+                num_simulations, num_days, weights, meanReturns, covMatrix, initial_portfolio
             )
 
             return res[0]
@@ -379,29 +380,34 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
         for_plot: bool = True,
     ) -> tuple:
         global portfolio_sims
-        portfolio_sims, sharpe_ratios, weight_lists, final_values, var, cvar, spread = (
+        portfolio_sims, sharpe_ratios, weight_lists, final_values, VaR_list, CVaR_list, sigmas, sortino_ratios = (
             MC(mc_sims, T, weights, meanReturns, covMatrix, initial_portfolio)
         )
 
         if for_plot:
-
             fig = go.Figure()
-            for i in range(mc_sims):
+
+            sorted_indices = np.argsort(final_values)[::-1]  # Sort indices in descending order
+            top_bottom_indices = np.concatenate([sorted_indices[:5], sorted_indices[-5:]])  # Top 5 and bottom 5 indices
+
+            for i in top_bottom_indices:
+                color = "green" if i in sorted_indices[:5] else "red"
                 fig.add_trace(
                     go.Scatter(
                         x=np.arange(T),
                         y=portfolio_sims[:, i],
                         mode="lines",
                         name=f"Simulation {i+1}",
+                        line=dict(color=color)
                     )
                 )
 
-            best_sim = np.argmax(final_values)
-            worst_sim = np.argmin(final_values)
-            fig.data[best_sim].line.color = "green"
-            fig.data[best_sim].name = "Best Simulation"
-            fig.data[worst_sim].line.color = "red"
-            fig.data[worst_sim].name = "Worst Simulation"
+            # best_sim = np.argmax(final_values)
+            # worst_sim = np.argmin(final_values)
+            # fig.data[best_sim].line.color = "green"
+            # fig.data[best_sim].name = "Best Simulation"
+            # fig.data[worst_sim].line.color = "red"
+            # fig.data[worst_sim].name = "Worst Simulation"
 
             fig.update_layout(
                 title="Monte Carlo Portfolio Simulation Over Time",
@@ -415,9 +421,10 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
                 weight_lists,
                 final_values,
                 sharpe_ratios,
-                var,
-                cvar,
-                spread,
+                VaR_list,
+                CVaR_list,
+                sigmas,
+                sortino_ratios,
                 portfolio_sims,
             )
         else:
@@ -435,9 +442,10 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
             State("weights-input", "value"),
             State("num-days-input", "value"),
             State("initial-portfolio-input", "value"),
+            State("num-simulations-input", "value"),
         ],
     )
-    def update_table(n_clicks, selected_stocks, weights, num_days, initial_portfolio):
+    def update_table(n_clicks, selected_stocks, weights, num_days, initial_portfolio, num_simulations):
         if n_clicks:
             weights = np.array([float(w.strip()) for w in weights.split(",")])
             weights /= np.sum(weights)
@@ -448,14 +456,11 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
             (_, meanReturns, covMatrix) = getData(
                 df, selected_stocks, start=startDate, end=endDate
             )
-            (_, weight_lists, final_values, sharpe_ratios, var, cvar, spread, _) = (
+            (_, weight_lists, final_values, sharpe_ratios, VaR_list, CVaR_list, sigmas, sortino_ratios, _) = (
                 run_monte_carlo_simulation(
-                    2000, num_days, weights, meanReturns, covMatrix, initial_portfolio
+                    num_simulations, num_days, weights, meanReturns, covMatrix, initial_portfolio
                 )
             )
-
-            VaR = initial_portfolio - var
-            CVaR = initial_portfolio - cvar
 
             sorted_indices = np.argsort(final_values)[::-1]
             top_bottom_indices = np.concatenate(
@@ -466,9 +471,11 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
                 {
                     "Simulation": i + 1,
                     "Final Portfolio Value": f"${final_values[i]:,.2f}",
-                    "VaR, CVaR": f"{VaR}, {CVaR}",
-                    "Sigma": f"{spread[i]*100:.2f}%",
+                    "VaR": f"${VaR_list[i]:,.2f}",
+                    "CVaR": f"${CVaR_list[i]:,.2f}",
+                    "Sigma": f"{sigmas[i]*100:.2f}%",
                     "Sharpe Ratio": f"{sharpe_ratios[i]:.2f}",
+                    "Sortino Ratio": f"{sortino_ratios[i]:.2f}",
                 }
                 for i in top_bottom_indices
             ]
@@ -476,9 +483,11 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
             columns = [
                 {"name": "Simulation", "id": "Simulation"},
                 {"name": "Final Portfolio Value", "id": "Final Portfolio Value"},
-                {"name": "VaR, CVaR", "id": "VaR, CVaR"},
+                {"name": "VaR", "id": "VaR"},
+                {"name": "CVaR", "id": "CVaR"},
                 {"name": "Sigma", "id": "Sigma"},
                 {"name": "Sharpe Ratio", "id": "Sharpe Ratio"},
+                {"name": "Sortino Ratio", "id": "Sortino Ratio"},
             ]
 
             fig = ff.create_distplot(
@@ -510,6 +519,11 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
                         arrowhead=1,
                         ax=0,
                         ay=-90,
+                        bordercolor="black",
+                        borderwidth=2,
+                        borderpad=4,
+                        bgcolor="white",
+                        opacity=0.8,
                     ),
                     dict(
                         x=median_value,
@@ -521,6 +535,11 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
                         arrowhead=1,
                         ax=0,
                         ay=-60,
+                        bordercolor="black",
+                        borderwidth=2,
+                        borderpad=4,
+                        bgcolor="white",
+                        opacity=0.8,
                     ),
                     dict(
                         x=mean_value + std_dev,
@@ -532,6 +551,11 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
                         arrowhead=1,
                         ax=0,
                         ay=-80,
+                        bordercolor="black",
+                        borderwidth=2,
+                        borderpad=4,
+                        bgcolor="white",
+                        opacity=0.8,
                     ),
                     dict(
                         x=mean_value - std_dev,
@@ -543,6 +567,11 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
                         arrowhead=1,
                         ax=0,
                         ay=-100,
+                        bordercolor="black",
+                        borderwidth=2,
+                        borderpad=4,
+                        bgcolor="white",
+                        opacity=0.8,
                     ),
                 ],
             )
@@ -552,14 +581,14 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
         return ([], [], go.Figure())
 
     @app.callback(
-    Output("optimal-metrics-output", "children"),
-    [Input("calculate-metrics-button", "n_clicks")],
-    [
-        State("target-value-input", "value"),
-        State("monte-carlo-simulation-graph", "figure"),
-        State("weights-input", "value"),
-        State("initial-portfolio-input", "value"),
-    ],
+        Output("optimal-metrics-output", "children"),
+        [Input("calculate-metrics-button", "n_clicks")],
+        [
+            State("target-value-input", "value"),
+            State("monte-carlo-simulation-graph", "figure"),
+            State("weights-input", "value"),
+            State("initial-portfolio-input", "value"),
+        ],
     )
     def update_optimal_metrics(
         n_clicks, target_value, simulation_figure, weights, initial_portfolio

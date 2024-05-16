@@ -144,11 +144,49 @@ def render_analyze(df):
 def render_montecarlo(df):
     return html.Div(
         [
-            html.P(
-                "This tab runs simulations to project future values of investment portfolios based on historical data and statistical methods. By generating a range of possible outcomes for each asset within the portfolio, \
-                the tab helps investors visualize potential risks and returns over a specified time period. Key statistics such as Value at Risk (VaR) and Conditional Value at Risk (CVaR) are calculated and displayed. VaR provides a threshold below \
-                which the portfolio value is unlikely to fall at a given confidence level, indicating the maximum expected loss under normal market conditions. CVaR, on the other hand, estimates the average loss exceeding the VaR, offering insight into \
-                potential losses in worst-case scenarios. These metrics assist investors in making informed decisions about risk management, asset allocation, and potential adjustments to their investment strategies.",
+            dcc.Markdown(
+                """
+                ## Intro
+                This tab performs Monte Carlo simulations to project future values of investment portfolios using historical data and statistical methods.
+                By generating a range of possible outcomes for each asset within the portfolio, investors can visualize potential risks and returns over a specified time period.
+                Key metrics such as Value at Risk (VaR), Conditional Value at Risk (CVaR), Sharpe Ratio, and Sortino Ratio are calculated and displayed: \n
+                
+                - **Value at Risk (VaR)**: Provides a threshold below which the portfolio value is unlikely to fall at a given confidence level, indicating the maximum expected loss under normal market conditions.\n
+                - **Conditional Value at Risk (CVaR)**: Estimates the average loss exceeding the VaR, offering insight into potential losses in worst-case scenarios.\n
+                - **Sharpe Ratio**: Measures the risk-adjusted return of the portfolio, with higher values indicating better risk-adjusted performance.\n
+                - **Sortino Ratio**: Similar to the Sharpe Ratio but focuses only on downside risk, providing a more accurate measure of risk-adjusted performance when returns are not symmetrically distributed.\
+                
+                
+                These metrics assist investors in making informed decisions about risk management, asset allocation, and potential adjustments to their investment strategies.
+
+                ## Code and Params
+
+                Monte Carlo simulation is a statistical method used to model the probability of different outcomes in a process that cannot easily be predicted due to the intervention of random variables. In the context of portfolio management, it is used to simulate the future returns of a portfolio by generating a wide range of possible outcomes based on historical data and statistical properties of asset returns.
+
+
+                ### A. Define Parameters
+                - **Number of Simulations (mc_sims)**: The number of simulated paths to generate.
+                - **Time Horizon (T)**: The number of time periods (e.g., days) for each simulation.
+                - **Portfolio Weights (weights)**: The allocation of the initial portfolio value across different assets.
+                - **Mean Returns (meanReturns)**: The expected returns of the assets.
+                - **Covariance Matrix (covMatrix)**: The covariance matrix of asset returns.
+                - **Initial Portfolio Value (initial_portfolio)**: The starting value of the portfolio.
+
+                ### B. Simulation Description
+                The simulation uses the Cholesky decomposition of the covariance matrix to ensure that the generated random returns preserve the statistical properties of the historical data.
+
+                - **Cholesky Decomposition (L)**: The covariance matrix is decomposed into a lower triangular matrix using Cholesky decomposition.
+                - **Random Samples (Z)**: Generate random samples from a standard normal distribution.
+                - **daily returns**: The daily returns are simulated by combining the mean returns with the random samples adjusted by the Cholesky matrix.
+                - **portfolio values**: The portfolio values are calculated by iteratively applying the daily returns to the initial portfolio value.
+                ```python
+                L = np.linalg.cholesky(covMatrix)
+                Z = np.random.normal(size=(T, len(weights)))
+                dailyReturns = meanM + np.inner(L, Z)
+                portfolio_values = np.cumprod(np.dot(weights, dailyReturns) + 1) * initial_portfolio
+                ```
+
+                """,
                 style={"font-size": "18px"},
             ),
             html.Hr(),
@@ -177,59 +215,81 @@ def render_montecarlo(df):
                         [
                             html.Label("Initial Portfolio Value ($):"),
                             dcc.Input(
-                                                id="initial-portfolio-input",
-                                                type="number",
-                                                value=10000,
-                                                style={"margin": "10px"},
-                                            ),
-                                        ]
-                                    ),
-                                    html.Div(
-                                        [
-                                            html.Label(
-                                                "Enter Target Portfolio Value ($):"
-                                            ),
-                                            dcc.Input(
-                                                id="target-value-input",
-                                                type="number",
-                                                value=12000,  # Default target value, adjust as needed
-                                                style={"margin": "10px"},
-                                            ),
-                                            html.Button(
-                                                "Calculate Optimal Metrics",
-                                                id="calculate-metrics-button",
-                                            ),
-                                            html.Div(
-                                                id="optimal-metrics-output"
-                                            ),  # Placeholder to display results
-                                        ]
-                                    ),
-                                    html.Button(
-                                        "Run Simulation", id="run-simulation-button"
-                                    ),
-                                    dcc.Graph(id="monte-carlo-simulation-graph"),
-                                    html.Hr(),
-                                    dcc.Graph(id="distribution-graph"),
-                                    html.H3("Simulation Results"),
-                                    dash_table.DataTable(id="simulation-results-table"),
-                                ]
+                                id="initial-portfolio-input",
+                                type="number",
+                                value=10000,
+                                style={"margin": "10px"},
                             ),
-                        ],
+                        ]
                     ),
+                    html.Div(
+                        [
+                            html.Label("Enter Number of Simulations:"),
+                            dcc.Input(
+                                id="num-simulations-input",
+                                type="number",
+                                value=2000,
+                                style={"margin": "10px"},
+                            ),
+                        ]
+                    ),
+                    html.Div(
+                        [
+                            html.Label(
+                                "Enter Target Portfolio Value ($):"
+                            ),
+                            dcc.Input(
+                                id="target-value-input",
+                                type="number",
+                                value=12000,  # Default target value, adjust as needed
+                                style={"margin": "10px"},
+                            ),
+                            html.Button(
+                                "Calculate Optimal Metrics",
+                                id="calculate-metrics-button",
+                            ),
+                            html.Div(
+                                id="optimal-metrics-output"
+                            ),  # Placeholder to display results
+                        ]
+                    ),
+                    html.Button(
+                        "Run Simulation", id="run-simulation-button"
+                    ),
+                ],
+                style={'display': 'flex', 'flex-direction': 'column', 'gap': '10px'}
+            ),
+            html.Hr(),
+            dcc.Graph(id="monte-carlo-simulation-graph"),
+            html.Hr(),
+            dcc.Graph(id="distribution-graph"),
+            html.H3("Simulation Results"),
+            dash_table.DataTable(id="simulation-results-table"),
+        ]
+    )
+
+
 
 
 def render_backtest_ml(df):
     return html.Div(
         [
-            html.P(
-                "Here you can backtest a trading strategy one stock at a time with variable initial investments and transaction share volume. The signals given also show the alpha of the portfolio. \
+            dcc.Markdown(
+                """
+                ## Intro
+                Here you can backtest a trading strategy one stock at a time with variable initial investments and transaction share volume. The signals given also show the alpha of the portfolio. \
                 I use a Naive fixed-time horizon target. The foundational model was trained on all data from 2010-01-01 to 2023-12-28. To generate real signals with no look-ahead bias, \
                 please select a date after the last train observation date. Currently, the model is simple and the target is stochastic, which can be viewed in more detail in the Theory tab. \
                 Backtesting allows us to evaluate the performance of a trading strategy using historical data. It helps determine if the strategy would have been profitable in the past, providing \
                     confidence that it might perform well in the future. A good PnL (Profit and Loss) from backtesting indicates that the strategy has potential for making money when applied to live \
                 data and close prices. \
                 This model is based on a neural network that tries to predict stochastic returns. Stochastic returns are inherently unpredictable, but the \
-                model aims to identify patterns and generate signals that can be used to make trading decisions. By backtesting, we can see how well the model's predictions align with actual market movements.",
+                model aims to identify patterns and generate signals that can be used to make trading decisions. By backtesting, we can see how well the model's predictions align with actual market movements.
+                
+                
+                
+                
+                """,
                 style={"font-size": "18px", "line-height": "1.6"},
             ),
             html.Hr(),
