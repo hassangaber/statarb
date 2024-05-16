@@ -10,12 +10,11 @@ import plotly.figure_factory as ff
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
 
-from api.network.basic_rf import PortfolioPrediction
+from api.network.predict import PortfolioPrediction
 
 from api.src.compute import compute_signal, getData
 from api.src.monteCarlo import MC
 from api.web_helpers.utils import random_color, kde_scipy
-
 
 def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
     """TIME SERIES ANALYSIS CALLBACK"""
@@ -600,49 +599,39 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
     Input("run-model-button", "n_clicks"),
     [
     State("stock-id-input", "value"),
-    #State("train-end-date-input", "value"),
+    State("model-id-input", "value"),
     State("test-start-date-input", "value"),
-    #State("start-date-input", "value"),
-    # State("batch-size-input", "value"),
-    # State("epochs-input", "value"),
-    # State("learning-rate-input", "value"),
-    # State("weight-decay-input", "value"),
     State("initial-investment-input", "value"),
     State("share-volume-input", "value")
     ]
     )
-    def handle_model_training(n_clicks, stock_id, 
-                              #train_end_date, 
-                              test_start_date, 
-                              #start_date, 
-                              #batch_size, epochs, lr, weight_decay, 
-                              initial_investment, share_volume):
-        if n_clicks is None or not all([stock_id, 
-                                        #train_end_date, 
-                                        test_start_date, 
-                                        #start_date, 
-                                        #batch_size, epochs, lr, weight_decay, 
-                                        initial_investment, share_volume]):
+    def handle_model_training(n_clicks, 
+                              stock_id, 
+                              model_id,
+                              test_start_date,
+                              initial_investment, 
+                              share_volume):
+        
+        if n_clicks is None or not all([stock_id,
+                                        test_start_date,
+                                        model_id,
+                                        initial_investment, 
+                                        share_volume]):
             return dash.no_update
 
-        # batch_size = int(batch_size)
-        # epochs = int(epochs)
-        # lr = float(lr)
-        # weight_decay = float(weight_decay)
         initial_investment = int(initial_investment)
         share_volume = int(share_volume)
 
         model = PortfolioPrediction(
-            "assets/data.csv", stock_id, 
-            #train_end_date, 
-            test_start_date=test_start_date, 
-            #start_date,
-            #batch_size=batch_size, epochs=epochs, lr=lr, weight_decay=weight_decay,
-            initial_investment=initial_investment, share_volume=share_volume
+            "assets/data.csv", 
+            stock_id, 
+            test_start_date=test_start_date,
+            initial_investment=initial_investment, 
+            share_volume=share_volume
         )
-        model.preprocess_data()
-        #model.train()
-        action_df = model.backtest()
+
+        model.preprocess_test_data()
+        action_df = model.backtest(model_id=model_id)
 
         return action_df.to_json(date_format="iso", orient="split")
 
@@ -663,7 +652,7 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
 
         action_df = pd.read_json(data_json, orient="split")
         action_df.DATE = pd.to_datetime(action_df.DATE)
-        action_df.set_index("DATE", inplace=True)
+        #action_df.set_index("DATE", inplace=True)
 
         # weeklyPortfolio = action_df.resample('W').last()
         # weeklyPortfolio['RETURNS'] = action_df['RETURNS'].resample('W').mean()

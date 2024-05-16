@@ -1,0 +1,32 @@
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 200px;
+    padding: 20px;
+    background-color: #f8f9fa;
+}
+
+.sidebar-header {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.sidebar-list {
+    list-style-type: none;
+    padding: 0;
+}
+
+.sidebar-list li {
+    margin-bottom: 10px;
+}
+
+.sidebar-list a {
+    text-decoration: none;
+    color: #007bff;
+}
+
+.sidebar-list a:hover {
+    text-decoration: underline;
+}
