@@ -17,7 +17,7 @@ def render_intro():
             html.Div(
                 [
                     html.A("email", href="mailto:hassansameh90@gmail.com", target="_blank", style={"margin-right": "25px", "color": "#333"}),
-                    html.A("cv", href="https://drive.google.com/file/d/1kgI4mUsJCdNKJEJVT10SE5xmyD6BjM0l/view?usp=sharing", target="_blank", style={"margin-right": "25px", "color": "#333"}),
+                    html.A("cv", href="https://drive.google.com/file/d/1wIPUDhL86DAmzJoxc_aPlWqWzqlwahU-/view?usp=sharing", target="_blank", style={"margin-right": "25px", "color": "#333"}),
                     html.A("LinkedIn Profile", href="https://www.linkedin.com/in/hassansgaber/", target="_blank", style={"margin-right": "25px", "color": "#0077B5"}),
                     html.A("GitHub Profile", href="https://github.com/hassangaber", target="_blank", style={"color": "#333"}),
                 ],
