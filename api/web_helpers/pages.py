@@ -275,64 +275,21 @@ def render_backtest_ml(df):
     return html.Div(
         [
             dcc.Markdown(
-                """
-                ## Intro
-                Here you can backtest a trading strategy one stock at a time with variable initial investments and transaction share volume. The signals given also show the alpha of the portfolio. \
-                I use a Naive fixed-time horizon target. The foundational model was trained on all data from 2010-01-01 to 2023-12-28. To generate real signals with no look-ahead bias, \
-                please select a date after the last train observation date. Currently, the model is simple and the target is stochastic, which can be viewed in more detail in the Theory tab. \
-                Backtesting allows us to evaluate the performance of a trading strategy using historical data. It helps determine if the strategy would have been profitable in the past, providing \
-                    confidence that it might perform well in the future. A good PnL (Profit and Loss) from backtesting indicates that the strategy has potential for making money when applied to live \
-                data and close prices. \
-                This model is based on a neural network that tries to predict stochastic returns. Stochastic returns are inherently unpredictable, but the \
-                model aims to identify patterns and generate signals that can be used to make trading decisions. By backtesting, we can see how well the model's predictions align with actual market movements.
-                
-                # Constructing the Target for Predicting Changes in Returns
+                        """
+                        ## Introduction
+                        Here you can backtest a trading strategy one stock at a time with variable initial investments and transaction share volume. The signals given also show the alpha of the portfolio. \
+                        I use a dynamic fixed-time horizon target. The foundational model was trained on all data from 2010-01-01 to 2023-12-28. To generate real signals with no look-ahead bias, \
+                        please select a date after the last train observation date. Backtesting allows us to evaluate the performance of a trading strategy using historical data. It helps determine if the strategy would have been profitable in the past, providing \
+                            confidence that it might perform well in the future. A good PnL (Profit and Loss) from backtesting indicates that the strategy has potential for making money when applied to live \
+                        data and close prices. \
+                        This model is based on a convolutional neural network (CNN) that tries to predict returns based on temporal patterns in the data. Although returns are inherently unpredictable, the \
+                        model aims to identify patterns and generate signals that can be used to make trading decisions. By backtesting, we can see how well the model's predictions align with actual market movements.
+                        
+                        Visit the theory tab to read about target and model construction.
+                        """,
+                        style={"font-size": "18px", "line-height": "1.6"}, mathjax=True
+                    ),
 
-                In supervised learning, labeling is necessary to train models to predict future changes in returns. This dataset class creates a target label for predicting changes in returns based on a dynamic threshold calculated from rolling volatility. The labels are classified into three categories:
-                - **1**: Change in returns greater than the positive threshold.
-                - **-1**: Change in returns less than the negative threshold.
-                - **0**: Change in returns within the threshold range.
-
-                ## Labeling Method
-
-                ### Change in Returns Calculation
-                The change in returns ($\Delta r_t$) over a specified horizon ($h$) is calculated as:
-
-                $$ 
-                \Delta r_t = r_t - r_{t-h} 
-                $$
-
-                where $r_t$ is the return at time $t$.
-
-                ### Rolling Volatility Calculation
-                Rolling volatility is computed as the square root of the sum of squared log returns over the horizon:
-
-                $$
-                V_t = \sqrt{\sum_{i=t-h+1}^{t} r_i^2} 
-                $$
-
-                ### Dynamic Threshold
-                The threshold ($T$) is defined as a multiple of the rolling volatility:
-
-                $$
-                B_t = T \cdot V_t 
-                $$
-                
-
-                The implementation in the `TimeSeriesDataset` class involves the following steps:
-
-                1. **Initialize the Class**: Set the parameters and prepare the data.
-
-                2. **Preprocess the Data**: Calculate changes in returns, rolling volatility, and assign labels.
-
-                3. **Scale Features**: Normalize the features using `StandardScaler`.
-
-                4. **Data Handling**: Implement methods to get the length of the dataset and retrieve individual data points.
-
-
-                """,
-                style={"font-size": "18px", "line-height": "1.6"}, mathjax=True
-            ),
             html.Hr(),
             html.Div(
                 [
@@ -369,8 +326,8 @@ def render_backtest_ml(df):
                         [
                             dcc.Dropdown(
                                 id="model-id-input",
-                                options=[{"label": i, "value": i} for i in ['1_day_horizon_MLP', 'volatility_horizon_MLP']],
-                                value="1_day_horizon_MLP",
+                                options=[{"label": i, "value": i} for i in ['model_1','model_2']],
+                                value="model_1",
                                 multi=False,
                                 placeholder="Select model to generate trading signal",
                                 style={'width': '48%', 'margin-right': '2%'}
@@ -414,7 +371,94 @@ def render_backtest_ml(df):
 def render_theory():
     return html.Div(
         [
-            html.Img(src="/assets/theory.png", style={'height':'75%', 'width': '80%'}),
+            dcc.Markdown("""
+                         ## Constructing the Target for Predicting Changes in Returns
+
+                        In supervised learning, labeling is necessary to train models to predict future changes in returns. This dataset class creates a target label for predicting changes in returns based on a dynamic threshold calculated from rolling volatility. The labels are classified into three categories:
+                        - **1**: Change in returns greater than the positive threshold.
+                        - **-1**: Change in returns less than the negative threshold.
+                        - **0**: Change in returns within the threshold range.
+
+                        ## Labeling Method
+
+                        ### Change in Returns Calculation
+                        The change in returns ($$\Delta r_t$$) over a specified horizon ($$h$$) is calculated as:
+
+                        $$ 
+                        \Delta r_t = r_t - r_{t-h} 
+                        $$
+
+                        where $$r_t$$ is the return at time $$t$$.
+
+                        ### Rolling Indicators
+                        In addition to returns, several rolling indicators are calculated to enhance the predictive power of the model:
+                        
+                        - **Momentum**: Calculated as the mean of returns over the horizon:
+
+                        $$
+                        M_t = h^{-1} \sum_{i=t-h+1}^{t} r_i
+                        $$
+
+                        - **Simple Moving Averages (SMA)**: For different periods to capture trends:
+                        
+                        $$
+                        S_{9} = 9^{-1} \sum_{i=t-9+1}^{t} \cdot P_i
+                        $$
+                        
+                        $$
+                        S_{21} = 21^{-1} \sum_{i=t-21+1}^{t} \cdot P_i
+                        $$
+
+                        ### Dynamic Threshold
+                        The threshold ($$T$$) is defined as a multiple of the rolling volatility:
+
+                        $$
+                        B_t = T \cdot V_t 
+                        $$
+
+                        where $$V_t$$ is the rolling volatility over a 90-day period.
+
+                        ### Label Assignment
+                        Labels are assigned based on the future returns and the calculated indicators:
+                        
+                        - **Buy Signal (1)**: Assigned when:
+                            - Future returns are greater than the positive threshold.
+                            - Momentum is positive.
+                            - 9-day SMA is greater than 21-day SMA.
+
+                        - **Sell Signal (-1)**: Assigned when:
+                            - Future returns are less than the negative threshold.
+                            - Momentum is negative.
+                            - 9-day SMA is less than 21-day SMA.
+
+                        - **Hold Signal (0)**: Assigned when the conditions for buy and sell signals are not met.
+
+                        The implementation in the `TimeSeriesDataset` class involves the following steps:
+
+                        1. **Initialize the Class**: Set the parameters and prepare the data.
+                        2. **Preprocess the Data**: Calculate changes in returns, rolling indicators, and assign labels.
+                        3. **Scale Features**: Normalize the features using `StandardScaler`.
+                        4. **Data Handling**: Implement methods to get the length of the dataset and retrieve individual data points.
+
+                        ## Model Architecture and Loss Function
+
+                        ### Convolutional Neural Network (CNN)
+                        The trading signal model is based on a convolutional neural network (CNN) which captures temporal patterns in the data. The architecture includes:
+                        - **Conv1D Layers**: To capture temporal dependencies in the time series data.
+                        - **Adaptive Pooling**: To reduce the sequence length to a fixed size.
+                        - **Fully Connected Layers**: To further process the extracted features.
+                        - **Activation Functions**: `ReLU` between layers and `Tanh` at the output to constrain the signals between -1 and 1.
+
+                        ### ExcessReturnLoss Function
+                        The custom loss function, `ExcessReturnLoss`, is designed to maximize the Sharpe Ratio, which measures the performance of the trading signals relative to their risk. The loss function:
+                        - **Calculates Excess Returns**: Based on the signals and the actual returns.
+                        - **Computes the Sharpe Ratio**: As the mean excess return divided by the standard deviation of excess returns.
+                        - **Negates the Sharpe Ratio**: So that minimizing the loss function maximizes the Sharpe Ratio.
+
+                        By using this architecture and loss function, the model aims to generate trading signals that optimize returns relative to risk.
+                        """,
+                        style={"font-size": "18px", "line-height": "1.6"}, mathjax=True
+                    ),
         ],
     )
 

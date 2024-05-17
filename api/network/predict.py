@@ -3,7 +3,7 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler
 
 from api.network.inference import run_inference_onnx
-from api.src.portfolio_sim import update_portfolio
+from api.src.portfolio_sim import update_portfolio, update_portfolio_new
 
 pd.options.display.float_format = "{:,.2f}".format
 
@@ -96,10 +96,11 @@ class PortfolioPrediction:
 
         Pr = run_inference_onnx(f'assets/{model_id}.onnx', self.X_test.astype(np.float32))
 
-        self.portfolio["predicted_signal"] = (Pr > buy_probability_threshold).astype(int)
+        #self.portfolio["predicted_signal"] = (Pr > buy_probability_threshold).astype(int)
+        self.portfolio["predicted_signal"] = Pr
         print(self.portfolio.predicted_signal)
-        self.portfolio["p_buy"] = Pr
-        self.portfolio["p_sell"] = 1 - Pr
+        # self.portfolio["p_buy"] = Pr
+        # self.portfolio["p_sell"] = 1 - Pr
 
         # Initialize self.portfolio columns
         self.portfolio["cash_on_hand"] = self.initial_investment
@@ -117,7 +118,7 @@ class PortfolioPrediction:
 
         # Iterate through the DataFrame to update each row
         for i in range(1, len(self.portfolio)):
-            self.portfolio.iloc[i] = update_portfolio(self.portfolio.iloc[i], 
+            self.portfolio.iloc[i] = update_portfolio_new(self.portfolio.iloc[i], 
                                                       self.portfolio.iloc[i - 1], 
                                                       self.initial_investment, 
                                                       self.share_volume)
