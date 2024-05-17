@@ -124,6 +124,31 @@ Monte Carlo simulations are used to project the future performance of investment
 
 5. Calculate performance metrics (e.g., Sharpe ratio, VaR, CVaR).
 
+## Code and Params
 
+Monte Carlo simulation is a statistical method used to model the probability of different outcomes in a process that cannot easily be predicted due to the intervention of random variables. In the context of portfolio management, it is used to simulate the future returns of a portfolio by generating a wide range of possible outcomes based on historical data and statistical properties of asset returns.
+
+
+### A. Define Parameters
+- **Number of Simulations (mc_sims)**: The number of simulated paths to generate.
+- **Time Horizon (T)**: The number of time periods (e.g., days) for each simulation.
+- **Portfolio Weights (weights)**: The allocation of the initial portfolio value across different assets.
+- **Mean Returns (meanReturns)**: The expected returns of the assets.
+- **Covariance Matrix (covMatrix)**: The covariance matrix of asset returns.
+- **Initial Portfolio Value (initial_portfolio)**: The starting value of the portfolio.
+
+### B. Simulation Description
+The simulation uses the Cholesky decomposition of the covariance matrix to ensure that the generated random returns preserve the statistical properties of the historical data.
+
+- **Cholesky Decomposition (L)**: The covariance matrix is decomposed into a lower triangular matrix using Cholesky decomposition.
+- **Random Samples (Z)**: Generate random samples from a standard normal distribution.
+- **daily returns**: The daily returns are simulated by combining the mean returns with the random samples adjusted by the Cholesky matrix.
+- **portfolio values**: The portfolio values are calculated by iteratively applying the daily returns to the initial portfolio value.
+```python
+L = np.linalg.cholesky(covMatrix)
+Z = np.random.normal(size=(T, len(weights)))
+dailyReturns = meanM + np.inner(L, Z)
+portfolio_values = np.cumprod(np.dot(weights, dailyReturns) + 1) * initial_portfolio
+```
 
 
