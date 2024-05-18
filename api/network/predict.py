@@ -59,7 +59,8 @@ class PortfolioPrediction:
 
         self.df["target"] = (self.df["RETURNS"] > 0).astype(int).values
 
-        features = ["CLOSE", "VOLATILITY_90D", "VOLUME", "HIGH", "CLOSE_ROC_3D", "CLOSE_EWMA_120D"]
+        features = ["CLOSE", "VOLATILITY_90D", "VOLUME", 
+                    "HIGH", 'CLOSE_EWMA_9D', 'VOLATILITY_90D_SMA_9D']
 
         #train_df = self.df[self.df["DATE"] <= self.train_end_date]
         test_df = self.df[self.df["DATE"] >= self.test_start_date]

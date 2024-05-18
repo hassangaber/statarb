@@ -7,8 +7,9 @@ from dash import Input, Output
 from api.web_helpers.layout import export_layout
 from api.web_helpers.callbacks import register_callbacks
 from api.web_helpers.pages import ( render_intro, render_montecarlo, 
-                                    render_analyze, render_backtest_indicators, 
-                                    render_backtest_ml, render_theory)
+                                    render_analyze, render_rf, 
+                                    render_backtest_ml, render_theory,
+                                    render_hmm)
 
 
 
@@ -32,8 +33,10 @@ def display_page(pathname):
         return render_backtest_ml(df)
     elif pathname == "/theory":
         return render_theory()
-    elif pathname == "/backtest-indicators":
-        return render_backtest_indicators(df)
+    elif pathname == '/backtest-rf':
+        return render_rf(df)
+    elif pathname == '/markov':
+        return render_hmm(df)
     else:
         return "404 - Page not found"
 
