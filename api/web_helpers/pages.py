@@ -468,25 +468,15 @@ def render_rf(df:pd.DataFrame) -> html.Div:
         [
             dcc.Markdown(
                 """
-                ## Introduction
-                Here you can backtest a trading strategy one stock at a time with variable initial investments and transaction share volume. The signals given also show the alpha of the portfolio. 
-                I use a dynamic fixed-time horizon target. The foundational model was trained on all data from 2010-01-01 to 2023-12-28. To generate real signals with no look-ahead bias, 
-                please select a date after the last train observation date. Backtesting allows us to evaluate the performance of a trading strategy using historical data. It helps determine if the strategy would have been profitable in the past, providing 
-                confidence that it might perform well in the future. A good PnL (Profit and Loss) from backtesting indicates that the strategy has potential for making money when applied to live 
-                data and close prices. 
-                
-                This model is based on tree-based models, specifically XGBoost and LightGBM, that try to predict returns based on patterns in the data. These models are robust and efficient for tabular data and are capable of capturing complex relationships in the dataset. By backtesting, we can see how well the model's predictions align with actual market movements.
-                
-                ### Building the Target
-                For XGBoost and LightGBM, the target is constructed based on historical returns and other financial indicators. A typical approach involves:
-                - **Calculating Future Returns**: This can be done using the log returns over a specified horizon.
-                - **Defining Thresholds**: Set thresholds based on rolling statistics such as volatility.
-                - **Assigning Labels**: Labels are assigned based on whether future returns exceed these thresholds.
-                
+                ## Random Forest Model Backtest
+                Here you can backtest a trading strategy one stock at a time with variable initial investments and transaction share volume using Random Forest models.
+                The signals given also show the alpha of the portfolio. Backtesting allows us to evaluate the performance of a trading strategy using historical data.
+                It helps determine if the strategy would have been profitable in the past, providing confidence that it might perform well in the future.
                 Visit the theory tab to read about target and model construction.
                 """,
                 style={"font-size": "18px", "line-height": "1.6"}, mathjax=True
             ),
+
             html.Hr(),
             html.Div(
                 [
@@ -500,7 +490,7 @@ def render_rf(df:pd.DataFrame) -> html.Div:
                     html.Div(
                         [
                             dcc.Dropdown(
-                                id="stock-id-input",
+                                id="rf-stock-id-input",
                                 options=[{"label": i, "value": i} for i in df.ID.unique()],
                                 value="AAPL",
                                 multi=False,
@@ -508,7 +498,7 @@ def render_rf(df:pd.DataFrame) -> html.Div:
                                 style={'width': '48%', 'margin-right': '4%'}
                             ),
                             html.Label('TRADING START: ', style={'margin-left': '5px'}),
-                            dcc.Input(id="test-start-date-input", type="text", value="2024-01-02", style={'width': '48%'}),
+                            dcc.Input(id="rf-test-start-date-input", type="text", value="2024-01-02", style={'width': '48%'}),
                         ],
                         style={'display': 'flex', 'margin-bottom': '20px'},
                     ),
@@ -522,12 +512,9 @@ def render_rf(df:pd.DataFrame) -> html.Div:
                     html.Div(
                         [
                             dcc.Dropdown(
-                                id="model-id-input",
-                                options=[
-                                    {"label": 'XGBoost', "value": 'xgboost'},
-                                    {"label": 'LightGBM', "value": 'lightgbm'}
-                                ],
-                                value="xgboost",
+                                id="rf-model-id-input",
+                                options=[{"label": i, "value": i} for i in ['xgb']],
+                                value="xgb",
                                 multi=False,
                                 placeholder="Select model to generate trading signal",
                                 style={'width': '48%', 'margin-right': '2%'}
@@ -535,34 +522,35 @@ def render_rf(df:pd.DataFrame) -> html.Div:
                             html.Div(
                                 [
                                     html.Label('Initial Investment:', style={'margin-left': '20px'}),
-                                    dcc.Input(id="initial-investment-input", type="text", value="10000", style={'width': '48%'}),
+                                    dcc.Input(id="rf-initial-investment-input", type="text", value="10000", style={'width': '48%'}),
                                 ],
                                 style={'width': '48%', 'margin-right': '2%'},
                             ),
                             html.Div(
                                 [
                                     html.Label('Share Volume:', style={'margin-left': '20px'}),
-                                    dcc.Input(id="share-volume-input", type="text", value="5", style={'width': '48%'}),
+                                    dcc.Input(id="rf-share-volume-input", type="text", value="5", style={'width': '48%'}),
                                 ],
                                 style={'width': '48%', 'margin-right': '2%'},
                             )
                         ],
                         style={'display': 'flex', 'margin-bottom': '20px'},
                     ),
-                    dcc.Store(id="stored-data"),  # Store for model data
-                    html.Button("Run Model", id="run-model-button", style={'margin-bottom': '20px'}),
-                    dcc.Graph(id="pnl-graph", config={'displayModeBar': False}),
-                    dcc.Graph(id="transaction-signals-graph", config={'displayModeBar': False}),
-                    dcc.Graph(id="portfolio-value-graph", config={'displayModeBar': False}),
-                    dcc.Graph(id="cash-on-hand-graph", config={'displayModeBar': False}),
-                    html.Div(id="stats-container"),
-                    dcc.Graph(id="returns-distribution-graph", config={'displayModeBar': False}),
-                    html.Div(id="table-container"),
-                    html.A("Download CSV", id="download-link", download="portfolio_data.csv", href="", target="_blank"),
+                    dcc.Store(id="rf-stored-data"),  # Store for model data
+                    html.Button("Run Model", id="rf-run-model-button", style={'margin-bottom': '20px'}),
+                    dcc.Graph(id="rf-pnl-graph", config={'displayModeBar': False}),
+                    dcc.Graph(id="rf-transaction-signals-graph", config={'displayModeBar': False}),
+                    dcc.Graph(id="rf-portfolio-value-graph", config={'displayModeBar': False}),
+                    dcc.Graph(id="rf-cash-on-hand-graph", config={'displayModeBar': False}),
+                    html.Div(id="rf-stats-container"),
+                    dcc.Graph(id="rf-returns-distribution-graph", config={'displayModeBar': False}),
+                    html.Div(id="rf-table-container"),
+                    html.A("Download CSV", id="rf-download-link", download="portfolio_data.csv", href="", target="_blank"),
                 ]
             ),
         ],
     )
+
 
 
 def render_hmm(df:pd.DataFrame) -> html.Div:
