@@ -1,10 +1,8 @@
 import onnxruntime as ort
 import numpy as np
 
-def run_inference_onnx(
-    model_path: str, 
-    input_data: np.ndarray
-) -> np.ndarray:
+
+def run_inference_onnx(model_path: str, input_data: np.ndarray) -> np.ndarray:
     """
     Run inference on an ONNX model.
 
@@ -26,5 +24,3 @@ def run_inference_onnx(
     result = sess.run(None, {input_name: input_data.astype(np.float32)})
     probabilities = result[0]
     return probabilities
-
-

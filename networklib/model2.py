@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 
+
 class TradingSignalNet(nn.Module):
     def __init__(self, input_dim=16, hidden_dim=128, output_dim=3):
         super(TradingSignalNet, self).__init__()
@@ -9,7 +10,7 @@ class TradingSignalNet(nn.Module):
         self.fc3 = nn.Linear(hidden_dim // 2, output_dim)
         self.relu = nn.ReLU()
         self.softmax = nn.Softmax(dim=1)
-        
+
         # Initialize weights
         self._initialize_weights()
 

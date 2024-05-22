@@ -2,6 +2,7 @@ import torch
 import torch.nn.functional as F
 import torch.nn as nn
 
+
 class StockModel(nn.Module):
     def __init__(self, in_features: int = 6, hidden_1: int = 128, hidden_2: int = 64, out: int = 3):
         super(StockModel, self).__init__()
@@ -19,5 +20,4 @@ class StockModel(nn.Module):
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         x = self.fc3(x)
-        return F.log_softmax(x, dim=1) 
-
+        return F.log_softmax(x, dim=1)

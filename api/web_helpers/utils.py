@@ -37,9 +37,7 @@ def random_color() -> str:
     return random.choice(colors)
 
 
-def kde_scipy(
-    x: list[float], x_grid: list[int], bandwidth: float = 0.2, **kwargs
-) -> list[float]:
+def kde_scipy(x: list[float], x_grid: list[int], bandwidth: float = 0.2, **kwargs) -> list[float]:
     """Compute the kernel density estimate on a grid of x values."""
     kde = stats.gaussian_kde(x, bw_method=bandwidth, **kwargs)
     return kde.evaluate(x_grid)

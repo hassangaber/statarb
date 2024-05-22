@@ -1,6 +1,7 @@
 import pandas as pd
 from dash import dcc, html
 
+
 def export_layout(df: pd.DataFrame) -> html.Div:
     return html.Div(
         [
@@ -15,9 +16,9 @@ def export_layout(df: pd.DataFrame) -> html.Div:
                             html.Li(html.A("2 Monte-Carlo Portfolio Simulation", href="/montecarlo")),
                             html.Li(html.A("3.1 Backtest with NN Approach", href="/backtest-ml")),
                             html.Li(html.A("3.2 Labeling Theory", href="/theory")),
-                            html.Li(html.A("3.3 Backtest with RF Approach", href='/backtest-rf')),
-                            html.Li(html.A("4 Hidden Markov Models with ML Signals", href='/markov')),
-                            #html.Li(html.A("4 Backtest with Indicators", href="/backtest-indicators")),
+                            html.Li(html.A("3.3 Backtest with RF Approach", href="/backtest-rf")),
+                            html.Li(html.A("4 Hidden Markov Models with ML Signals", href="/markov")),
+                            # html.Li(html.A("4 Backtest with Indicators", href="/backtest-indicators")),
                         ],
                         className="sidebar-list",
                     ),
@@ -33,9 +34,6 @@ def export_layout(df: pd.DataFrame) -> html.Div:
                     "background-color": "#f8f9fa",
                 },
             ),
-            html.Div(
-                id="page-content",
-                style={"margin-left": "220px", "padding": "20px"}
-            ),
+            html.Div(id="page-content", style={"margin-left": "220px", "padding": "20px"}),
         ]
     )

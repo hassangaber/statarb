@@ -17,17 +17,36 @@ def render_intro():
             ),
             html.Div(
                 [
-                    html.A("email", href="mailto:hassansameh90@gmail.com", target="_blank", style={"margin-right": "25px", "color": "#333"}),
-                    html.A("cv", href="https://drive.google.com/file/d/1wIPUDhL86DAmzJoxc_aPlWqWzqlwahU-/view?usp=sharing", target="_blank", style={"margin-right": "25px", "color": "#333"}),
-                    html.A("LinkedIn Profile", href="https://www.linkedin.com/in/hassansgaber/", target="_blank", style={"margin-right": "25px", "color": "#0077B5"}),
-                    html.A("GitHub Profile", href="https://github.com/hassangaber", target="_blank", style={"color": "#333"}),
+                    html.A(
+                        "email",
+                        href="mailto:hassansameh90@gmail.com",
+                        target="_blank",
+                        style={"margin-right": "25px", "color": "#333"},
+                    ),
+                    html.A(
+                        "cv",
+                        href="https://drive.google.com/file/d/1wIPUDhL86DAmzJoxc_aPlWqWzqlwahU-/view?usp=sharing",
+                        target="_blank",
+                        style={"margin-right": "25px", "color": "#333"},
+                    ),
+                    html.A(
+                        "LinkedIn Profile",
+                        href="https://www.linkedin.com/in/hassansgaber/",
+                        target="_blank",
+                        style={"margin-right": "25px", "color": "#0077B5"},
+                    ),
+                    html.A(
+                        "GitHub Profile", href="https://github.com/hassangaber", target="_blank", style={"color": "#333"}
+                    ),
                 ],
                 style={"padding": "10px", "font-size": "36px"},
             ),
             html.Div(
                 [
                     html.H4("Experience", style={"color": "#34495e"}),
-                    html.P("Data Scientist Intern at PSP Investments (January 2023 – April 2024)", style={"font-weight": "bold"}),
+                    html.P(
+                        "Data Scientist Intern at PSP Investments (January 2023 – April 2024)", style={"font-weight": "bold"}
+                    ),
                     html.Ul(
                         [
                             html.Li("Supported alpha generation team managing $8.5B with predictive analytics."),
@@ -36,7 +55,10 @@ def render_intro():
                         ],
                         style={"list-style-type": "square", "padding-left": "20px"},
                     ),
-                    html.P("Data Scientist Intern at National Bank of Canada (May 2022 – August 2022)", style={"font-weight": "bold"}),
+                    html.P(
+                        "Data Scientist Intern at National Bank of Canada (May 2022 – August 2022)",
+                        style={"font-weight": "bold"},
+                    ),
                     html.Ul(
                         [
                             html.Li("Patented and created automatic data drift detection tool saving over $765k annually."),
@@ -44,11 +66,16 @@ def render_intro():
                         ],
                         style={"list-style-type": "square", "padding-left": "20px"},
                     ),
-                    html.P("Research Assistant - Data Scientist at McGill University Health Center (September 2021 – August 2022)", style={"font-weight": "bold"}),
+                    html.P(
+                        "Research Assistant - Data Scientist at McGill University Health Center (September 2021 – August 2022)",
+                        style={"font-weight": "bold"},
+                    ),
                     html.Ul(
                         [
                             html.Li("Innovated data computing scheme to speed up website load times by 5-fold."),
-                            html.Li("Developed visualization methods to find new gene relationships in chronic lung diseases."),
+                            html.Li(
+                                "Developed visualization methods to find new gene relationships in chronic lung diseases."
+                            ),
                         ],
                         style={"list-style-type": "square", "padding-left": "20px"},
                     ),
@@ -58,13 +85,16 @@ def render_intro():
             html.Div(
                 [
                     html.H4("Education", style={"color": "#34495e"}),
-                    html.P("Bachelor of Engineering, Electrical Engineering, McGill University (September 2019 – April 2024)")
+                    html.P(
+                        "Bachelor of Engineering, Electrical Engineering, McGill University (September 2019 – April 2024)"
+                    ),
                 ],
                 style={"padding": "10px", "font-weight": "bold"},
             ),
         ],
         style={"padding": "20px", "font-size": "30px"},
     )
+
 
 def render_analyze(df):
     return html.Div(
@@ -141,6 +171,7 @@ def render_analyze(df):
         ],
         style={"padding": "10px"},
     )
+
 
 def render_montecarlo(df):
     return html.Div(
@@ -236,9 +267,7 @@ def render_montecarlo(df):
                     ),
                     html.Div(
                         [
-                            html.Label(
-                                "Enter Target Portfolio Value ($):"
-                            ),
+                            html.Label("Enter Target Portfolio Value ($):"),
                             dcc.Input(
                                 id="target-value-input",
                                 type="number",
@@ -249,16 +278,12 @@ def render_montecarlo(df):
                                 "Calculate Optimal Metrics",
                                 id="calculate-metrics-button",
                             ),
-                            html.Div(
-                                id="optimal-metrics-output"
-                            ),  # Placeholder to display results
+                            html.Div(id="optimal-metrics-output"),  # Placeholder to display results
                         ]
                     ),
-                    html.Button(
-                        "Run Simulation", id="run-simulation-button"
-                    ),
+                    html.Button("Run Simulation", id="run-simulation-button"),
                 ],
-                style={'display': 'flex', 'flex-direction': 'column', 'gap': '10px'}
+                style={"display": "flex", "flex-direction": "column", "gap": "10px"},
             ),
             html.Hr(),
             dcc.Graph(id="monte-carlo-simulation-graph"),
@@ -270,14 +295,12 @@ def render_montecarlo(df):
     )
 
 
-
-
 def render_backtest_ml(df):
     return html.Div(
         [
             dcc.Markdown(
-                        """
-                        ## Introduction
+                """
+                        ## Neural Network Returns Prediction Backtest (Main Model)
                         Here you can backtest a trading strategy one stock at a time with variable initial investments and transaction share volume. The signals given also show the alpha of the portfolio. \
                         I use a dynamic fixed-time horizon target. The foundational model was trained on all data from 2010-01-01 to 2023-12-28. To generate real signals with no look-ahead bias, \
                         please select a date after the last train observation date. Backtesting allows us to evaluate the performance of a trading strategy using historical data. It helps determine if the strategy would have been profitable in the past, providing \
@@ -288,18 +311,18 @@ def render_backtest_ml(df):
                         
                         Visit the theory tab to read about target and model construction.
                         """,
-                        style={"font-size": "18px", "line-height": "1.6"}, mathjax=True
-                    ),
-
+                style={"font-size": "18px", "line-height": "1.6"},
+                mathjax=True,
+            ),
             html.Hr(),
             html.Div(
                 [
                     html.H3("Stock and Date Selection"),
                     html.Div(
                         [
-                            html.Label('Stock ID:'),
+                            html.Label("Stock ID:"),
                         ],
-                        style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '10px'},
+                        style={"display": "flex", "align-items": "center", "margin-bottom": "10px"},
                     ),
                     html.Div(
                         [
@@ -309,55 +332,57 @@ def render_backtest_ml(df):
                                 value="AAPL",
                                 multi=False,
                                 placeholder="Select stock to backtest",
-                                style={'width': '48%', 'margin-right': '4%'}
+                                style={"width": "48%", "margin-right": "4%"},
                             ),
-                            html.Label('TRADING START: ', style={'margin-left': '5px'}),
-                            dcc.Input(id="test-start-date-input", type="text", value="2024-01-02", style={'width': '48%'}),
+                            html.Label("TRADING START: ", style={"margin-left": "5px"}),
+                            dcc.Input(id="test-start-date-input", type="text", value="2024-01-02", style={"width": "48%"}),
                         ],
-                        style={'display': 'flex', 'margin-bottom': '20px'},
+                        style={"display": "flex", "margin-bottom": "20px"},
                     ),
                     html.H3("Model Parameters"),
                     html.Div(
                         [
-                            html.Label('Signal Model:'),
+                            html.Label("Signal Model:"),
                         ],
-                        style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '10px'},
+                        style={"display": "flex", "align-items": "center", "margin-bottom": "10px"},
                     ),
                     html.Div(
                         [
                             dcc.Dropdown(
                                 id="model-id-input",
-                                options=[{"label": i, "value": i} for i in ['model_1','model_2']],
+                                options=[{"label": i, "value": i} for i in ["model_1", "model_2","model_3"]],
                                 value="model_1",
                                 multi=False,
                                 placeholder="Select model to generate trading signal",
-                                style={'width': '48%', 'margin-right': '2%'}
+                                style={"width": "48%", "margin-right": "2%"},
                             ),
                             html.Div(
                                 [
-                                    html.Label('Initial Investment:', style={'margin-left': '20px'}),
-                                    dcc.Input(id="initial-investment-input", type="text", value="10000", style={'width': '48%'}),
+                                    html.Label("Initial Investment:", style={"margin-left": "20px"}),
+                                    dcc.Input(
+                                        id="initial-investment-input", type="text", value="10000", style={"width": "48%"}
+                                    ),
                                 ],
-                                style={'width': '48%', 'margin-right': '2%'},
+                                style={"width": "48%", "margin-right": "2%"},
                             ),
                             html.Div(
                                 [
-                                    html.Label('Share Volume:', style={'margin-left': '20px'}),
-                                    dcc.Input(id="share-volume-input", type="text", value="5", style={'width': '48%'}),
+                                    html.Label("Share Volume:", style={"margin-left": "20px"}),
+                                    dcc.Input(id="share-volume-input", type="text", value="5", style={"width": "48%"}),
                                 ],
-                                style={'width': '48%', 'margin-right': '2%'},
-                            )
+                                style={"width": "48%", "margin-right": "2%"},
+                            ),
                         ],
-                        style={'display': 'flex', 'margin-bottom': '20px'},
+                        style={"display": "flex", "margin-bottom": "20px"},
                     ),
                     dcc.Store(id="stored-data"),  # Store for model data
-                    html.Button("Run Model", id="run-model-button", style={'margin-bottom': '20px'}),
-                    dcc.Graph(id="pnl-graph", config={'displayModeBar': False}),
-                    dcc.Graph(id="transaction-signals-graph", config={'displayModeBar': False}),
-                    dcc.Graph(id="portfolio-value-graph", config={'displayModeBar': False}),
-                    dcc.Graph(id="cash-on-hand-graph", config={'displayModeBar': False}),
+                    html.Button("Run Model", id="run-model-button", style={"margin-bottom": "20px"}),
+                    dcc.Graph(id="pnl-graph", config={"displayModeBar": False}),
+                    dcc.Graph(id="transaction-signals-graph", config={"displayModeBar": False}),
+                    dcc.Graph(id="portfolio-value-graph", config={"displayModeBar": False}),
+                    dcc.Graph(id="cash-on-hand-graph", config={"displayModeBar": False}),
                     html.Div(id="stats-container"),
-                    dcc.Graph(id="returns-distribution-graph", config={'displayModeBar': False}),
+                    dcc.Graph(id="returns-distribution-graph", config={"displayModeBar": False}),
                     html.Div(id="table-container"),
                     html.A("Download CSV", id="download-link", download="portfolio_data.csv", href="", target="_blank"),
                 ]
@@ -372,7 +397,8 @@ def render_backtest_ml(df):
 def render_theory():
     return html.Div(
         [
-            dcc.Markdown("""
+            dcc.Markdown(
+                """
                          ## Constructing the Target for Predicting Changes in Returns
 
                         In supervised learning, labeling is necessary to train models to predict future changes in returns. This dataset class creates a target label for predicting changes in returns based on a dynamic threshold calculated from rolling volatility. The labels are classified into three categories:
@@ -458,34 +484,39 @@ def render_theory():
 
                         By using this architecture and loss function, the model aims to generate trading signals that optimize returns relative to risk.
                         """,
-                        style={"font-size": "18px", "line-height": "1.6"}, mathjax=True
-                    ),
+                style={"font-size": "18px", "line-height": "1.6"},
+                mathjax=True,
+            ),
         ],
     )
 
-def render_rf(df:pd.DataFrame) -> html.Div:
+
+def render_rf(df: pd.DataFrame) -> html.Div:
     return html.Div(
         [
             dcc.Markdown(
                 """
-                ## Random Forest Model Backtest
+                ## Random Forest Model Backtest (Baseline Model)
                 Here you can backtest a trading strategy one stock at a time with variable initial investments and transaction share volume using Random Forest models.
                 The signals given also show the alpha of the portfolio. Backtesting allows us to evaluate the performance of a trading strategy using historical data.
                 It helps determine if the strategy would have been profitable in the past, providing confidence that it might perform well in the future.
                 Visit the theory tab to read about target and model construction.
-                """,
-                style={"font-size": "18px", "line-height": "1.6"}, mathjax=True
-            ),
 
+                The main reason for including this tab is to refer to it as a preformance baseline for returns prediction in the simplest statistical learning
+                set up: a multi-class prediction on the returns cardinality based on raw and engineered time-series features on the close, volume, and volatility data of the stock.
+                """,
+                style={"font-size": "18px", "line-height": "1.6"},
+                mathjax=True,
+            ),
             html.Hr(),
             html.Div(
                 [
                     html.H3("Stock and Date Selection"),
                     html.Div(
                         [
-                            html.Label('Stock ID:'),
+                            html.Label("Stock ID:"),
                         ],
-                        style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '10px'},
+                        style={"display": "flex", "align-items": "center", "margin-bottom": "10px"},
                     ),
                     html.Div(
                         [
@@ -495,55 +526,59 @@ def render_rf(df:pd.DataFrame) -> html.Div:
                                 value="AAPL",
                                 multi=False,
                                 placeholder="Select stock to backtest",
-                                style={'width': '48%', 'margin-right': '4%'}
+                                style={"width": "48%", "margin-right": "4%"},
                             ),
-                            html.Label('TRADING START: ', style={'margin-left': '5px'}),
-                            dcc.Input(id="rf-test-start-date-input", type="text", value="2024-01-02", style={'width': '48%'}),
+                            html.Label("TRADING START: ", style={"margin-left": "5px"}),
+                            dcc.Input(
+                                id="rf-test-start-date-input", type="text", value="2024-01-02", style={"width": "48%"}
+                            ),
                         ],
-                        style={'display': 'flex', 'margin-bottom': '20px'},
+                        style={"display": "flex", "margin-bottom": "20px"},
                     ),
                     html.H3("Model Parameters"),
                     html.Div(
                         [
-                            html.Label('Signal Model:'),
+                            html.Label("Signal Model:"),
                         ],
-                        style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '10px'},
+                        style={"display": "flex", "align-items": "center", "margin-bottom": "10px"},
                     ),
                     html.Div(
                         [
                             dcc.Dropdown(
                                 id="rf-model-id-input",
-                                options=[{"label": i, "value": i} for i in ['xgb']],
+                                options=[{"label": i, "value": i} for i in ["xgb"]],
                                 value="xgb",
                                 multi=False,
                                 placeholder="Select model to generate trading signal",
-                                style={'width': '48%', 'margin-right': '2%'}
+                                style={"width": "48%", "margin-right": "2%"},
                             ),
                             html.Div(
                                 [
-                                    html.Label('Initial Investment:', style={'margin-left': '20px'}),
-                                    dcc.Input(id="rf-initial-investment-input", type="text", value="10000", style={'width': '48%'}),
+                                    html.Label("Initial Investment:", style={"margin-left": "20px"}),
+                                    dcc.Input(
+                                        id="rf-initial-investment-input", type="text", value="10000", style={"width": "48%"}
+                                    ),
                                 ],
-                                style={'width': '48%', 'margin-right': '2%'},
+                                style={"width": "48%", "margin-right": "2%"},
                             ),
                             html.Div(
                                 [
-                                    html.Label('Share Volume:', style={'margin-left': '20px'}),
-                                    dcc.Input(id="rf-share-volume-input", type="text", value="5", style={'width': '48%'}),
+                                    html.Label("Share Volume:", style={"margin-left": "20px"}),
+                                    dcc.Input(id="rf-share-volume-input", type="text", value="5", style={"width": "48%"}),
                                 ],
-                                style={'width': '48%', 'margin-right': '2%'},
-                            )
+                                style={"width": "48%", "margin-right": "2%"},
+                            ),
                         ],
-                        style={'display': 'flex', 'margin-bottom': '20px'},
+                        style={"display": "flex", "margin-bottom": "20px"},
                     ),
                     dcc.Store(id="rf-stored-data"),  # Store for model data
-                    html.Button("Run Model", id="rf-run-model-button", style={'margin-bottom': '20px'}),
-                    dcc.Graph(id="rf-pnl-graph", config={'displayModeBar': False}),
-                    dcc.Graph(id="rf-transaction-signals-graph", config={'displayModeBar': False}),
-                    dcc.Graph(id="rf-portfolio-value-graph", config={'displayModeBar': False}),
-                    dcc.Graph(id="rf-cash-on-hand-graph", config={'displayModeBar': False}),
+                    html.Button("Run Model", id="rf-run-model-button", style={"margin-bottom": "20px"}),
+                    dcc.Graph(id="rf-pnl-graph", config={"displayModeBar": False}),
+                    dcc.Graph(id="rf-transaction-signals-graph", config={"displayModeBar": False}),
+                    dcc.Graph(id="rf-portfolio-value-graph", config={"displayModeBar": False}),
+                    dcc.Graph(id="rf-cash-on-hand-graph", config={"displayModeBar": False}),
                     html.Div(id="rf-stats-container"),
-                    dcc.Graph(id="rf-returns-distribution-graph", config={'displayModeBar': False}),
+                    dcc.Graph(id="rf-returns-distribution-graph", config={"displayModeBar": False}),
                     html.Div(id="rf-table-container"),
                     html.A("Download CSV", id="rf-download-link", download="portfolio_data.csv", href="", target="_blank"),
                 ]
@@ -552,8 +587,7 @@ def render_rf(df:pd.DataFrame) -> html.Div:
     )
 
 
-
-def render_hmm(df:pd.DataFrame) -> html.Div:
+def render_hmm(df: pd.DataFrame) -> html.Div:
     pass
 
 

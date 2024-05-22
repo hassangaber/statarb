@@ -728,8 +728,8 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
         transaction_signals_fig = go.Figure(
             data=[
                 go.Scatter(x=action_df.DATE, y=action_df['CLOSE'], mode='lines', name='Close Price', line=dict(shape='linear', smoothing=1.3)),
-                go.Scatter(x=action_df[action_df['predicted_signal'] >0.1].DATE, y=action_df[action_df['predicted_signal'] >0.1]['CLOSE'], mode='markers', marker=dict(color='green', size=10, symbol='triangle-up'), name='Buy Signal'),
-                go.Scatter(x=action_df[(action_df['predicted_signal'] < -0.1) & (action_df['cumulative_shares'] > 0)].DATE, y=action_df[(action_df['predicted_signal']< -0.1) & (action_df['cumulative_shares'] > 0)]['CLOSE'], mode='markers', marker=dict(color='red', size=10, symbol='triangle-down'), name='Sell Signal')
+                go.Scatter(x=action_df[action_df['graph_signal'] ==2].DATE, y=action_df[action_df['graph_signal'] ==2]['CLOSE'], mode='markers', marker=dict(color='green', size=10, symbol='triangle-up'), name='Buy Signal'),
+                go.Scatter(x=action_df[(action_df['graph_signal'] ==0) & (action_df['cumulative_shares'] > 0)].DATE, y=action_df[(action_df['graph_signal'] ==0) & (action_df['cumulative_shares'] > 0)]['CLOSE'], mode='markers', marker=dict(color='red', size=10, symbol='triangle-down'), name='Sell Signal')
             ],
             layout=graph_layout.update(title='Transaction Signals Over Time', yaxis_title='Close Price (US$)')
         )
@@ -746,6 +746,8 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
             return df
 
         formatted_df = format_floats(action_df.copy())
+
+        formatted_df = formatted_df.drop(columns=['graph_signal','predicted_signal']) if 'graph_signal' in formatted_df.columns.to_list() else formatted_df
 
         # Data Table with compact formatting and bold column names
         data_table = dash_table.DataTable(

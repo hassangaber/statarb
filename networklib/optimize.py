@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+
 class VolatilityWeightedLoss(nn.Module):
     def __init__(self):
         super(VolatilityWeightedLoss, self).__init__()
@@ -20,4 +21,3 @@ class VolatilityWeightedLoss(nn.Module):
         # Total loss combining base loss and deviation penalty
         total_loss = base_loss + deviation_penalty
         return base_loss
-

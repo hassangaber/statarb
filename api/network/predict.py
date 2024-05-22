@@ -4,9 +4,10 @@ from sklearn.preprocessing import StandardScaler
 import pickle
 
 from api.network.inference import run_inference_onnx
-from api.src.portfolio_sim import update_portfolio_rf, update_portfolio_new
+from api.src.portfolio_sim import update_portfolio_rf, update_portfolio_new, update_portfolio_softmax
 
 pd.options.display.float_format = "{:,.2f}".format
+
 
 class PortfolioPrediction:
     def __init__(
@@ -14,7 +15,7 @@ class PortfolioPrediction:
         filename: str,
         stock_id: str,
         test_start_date: str,
-        train_end_date: str='2024-01-01',
+        train_end_date: str = "2024-01-01",
         start_date: str = "2015-01-01",
         initial_investment: int = 10000,
         share_volume: int = 5,
@@ -43,7 +44,7 @@ class PortfolioPrediction:
         self.model = None
         self.train_loader = None
         self.portfolio = pd.DataFrame()
-        self.scaler = StandardScaler().set_output(transform='pandas')
+        self.scaler = StandardScaler().set_output(transform="pandas")
 
         self.initial_investment = initial_investment
         self.share_volume = share_volume
@@ -55,54 +56,97 @@ class PortfolioPrediction:
         Returns:
             np.ndarray: Test set features.
         """
-        self.df = self.df[(self.df.ID == self.stock_id) & (self.df.DATE >= self.start_date)].sort_values('DATE')
+        self.df = self.df[(self.df.ID == self.stock_id) & (self.df.DATE >= self.start_date)].sort_values("DATE")
         self.df.dropna(inplace=True)
 
-        self.df["target"] = (self.df["RETURNS"] > 0).astype(int).values
+        features = [
+            "CLOSE",
+            "VOLUME",
+            "HIGH",
+            "RETURNS",
+            "VOLATILITY_90D",
+            "CLOSE_SMA_3D",
+            "CLOSE_EWMA_3D",
+            "VOLATILITY_90D_SMA_3D",
+            "VOLATILITY_90D_EWMA_3D",
+            "CLOSE_SMA_9D",
+            "CLOSE_EWMA_9D",
+            "VOLATILITY_90D_SMA_9D",
+            "VOLATILITY_90D_EWMA_9D",
+            "CLOSE_SMA_21D",
+            "CLOSE_EWMA_21D",
+            "VOLATILITY_90D_SMA_21D",
+            "VOLATILITY_90D_EWMA_21D",
+            "CLOSE_SMA_50D",
+            "CLOSE_EWMA_50D",
+            "VOLATILITY_90D_SMA_50D",
+            "VOLATILITY_90D_EWMA_50D",
+            "CLOSE_SMA_65D",
+            "CLOSE_EWMA_65D",
+            "VOLATILITY_90D_SMA_65D",
+            "VOLATILITY_90D_EWMA_65D",
+            "CLOSE_SMA_120D",
+            "CLOSE_EWMA_120D",
+            "VOLATILITY_90D_SMA_120D",
+            "VOLATILITY_90D_EWMA_120D",
+            "CLOSE_SMA_360D",
+            "CLOSE_EWMA_360D",
+            "VOLATILITY_90D_SMA_360D",
+            "VOLATILITY_90D_EWMA_360D",
+            "CLOSE_ROC_3D",
+            "HIGH_ROC_3D",
+            "VOLATILITY_90D_ROC_3D",
+            "CLOSE_ROC_9D",
+            "HIGH_ROC_9D",
+            "VOLATILITY_90D_ROC_9D",
+            "CLOSE_ROC_21D",
+            "HIGH_ROC_21D",
+            "VOLATILITY_90D_ROC_21D",
+            "CLOSE_ROC_50D",
+            "HIGH_ROC_50D",
+            "VOLATILITY_90D_ROC_50D",
+            "CLOSE_ROC_65D",
+            "HIGH_ROC_65D",
+            "VOLATILITY_90D_ROC_65D",
+            "CLOSE_ROC_120D",
+            "HIGH_ROC_120D",
+            "VOLATILITY_90D_ROC_120D",
+            "CLOSE_ROC_360D",
+            "HIGH_ROC_360D",
+            "VOLATILITY_90D_ROC_360D",
+        ]
 
-        features = ["CLOSE", "VOLATILITY_90D", "VOLUME", 
-                    "HIGH", 'CLOSE_EWMA_9D', 'VOLATILITY_90D_SMA_9D']
-
-        #train_df = self.df[self.df["DATE"] <= self.train_end_date]
+        train_df = self.df[self.df["DATE"] < self.train_end_date]
         test_df = self.df[self.df["DATE"] >= self.test_start_date]
 
-        #self.scaler.fit(train_df[features])
-        # train_df[features] = self.scaler.transform(train_df[features])
-        test_df[features] = self.scaler.fit_transform(test_df[features])
-
-        #self.X_train = train_df[features].values
-        #self.y_train = train_df["target"].values
+        train_df[features] = self.scaler.fit_transform(train_df[features])
+        test_df[features] = self.scaler.transform(test_df[features])
 
         self.X_test = test_df[features].values
-        self.y_test = test_df["target"].values
-
-        #self.volatility_train = train_df["VOLATILITY_90D"].values 
 
         return self.X_test
 
-    def backtest(self, buy_probability_threshold:float=0.5, model_id:str='model') -> pd.DataFrame:
+    def backtest(self, model_id: str = "model") -> pd.DataFrame:
         """
         Backtest the model and calculate portfolio performance.
 
         Returns:
             pd.DataFrame: Portfolio performance metrics.
         """
-        self.portfolio = (
-            self.df[["DATE", "CLOSE", "RETURNS"]]
-            .loc[self.df["DATE"] >= self.test_start_date]
-            .copy()
-        )
+        self.portfolio = self.df[["DATE", "CLOSE", "RETURNS"]].loc[self.df["DATE"] >= self.test_start_date].copy()
 
         self.portfolio.sort_values(by="DATE", inplace=True)
         self.portfolio.reset_index(drop=True, inplace=True)
 
-        Pr = run_inference_onnx(f'assets/{model_id}.onnx', self.X_test.astype(np.float32))
+        Pr = run_inference_onnx(f"assets/{model_id}.onnx", self.X_test.astype(np.float32))
 
-        #self.portfolio["predicted_signal"] = (Pr > buy_probability_threshold).astype(int)
-        self.portfolio["predicted_signal"] = Pr
-        print(self.portfolio.predicted_signal)
-        # self.portfolio["p_buy"] = Pr
-        # self.portfolio["p_sell"] = 1 - Pr
+        self.portfolio["predicted_signal"] = [p for p in Pr]
+
+        self.portfolio['p_buy'] = [p[2] for p in Pr]
+        self.portfolio['p_hold'] = [p[1] for p in Pr]
+        self.portfolio['p_sell'] = [p[0] for p in Pr]
+
+        self.portfolio["graph_signal"] = [np.argmax(p) for p in Pr]
 
         # Initialize self.portfolio columns
         self.portfolio["cash_on_hand"] = self.initial_investment
@@ -112,23 +156,32 @@ class PortfolioPrediction:
         self.portfolio["PnL"] = 0.0
         self.portfolio["position"] = "no position"
 
-        # Initialize the first row based on initial investment
-        # self.portfolio.iloc[0] = update_portfolio(self.portfolio.iloc[0], 
-        #                                           self.portfolio.iloc[0], 
-        #                                           self.initial_investment, 
-        #                                           self.share_volume)
-
         # Iterate through the DataFrame to update each row
         for i in range(1, len(self.portfolio)):
-            self.portfolio.iloc[i] = update_portfolio_new(self.portfolio.iloc[i], 
-                                                      self.portfolio.iloc[i - 1], 
-                                                      self.initial_investment, 
-                                                      self.share_volume)
+            self.portfolio.iloc[i] = update_portfolio_softmax(
+                self.portfolio.iloc[i], self.portfolio.iloc[i - 1], self.initial_investment, self.share_volume, tr=0.45
+            )
 
         # Return the relevant columns
-        return self.portfolio[['DATE', 'CLOSE', 'RETURNS','cash_on_hand', 'share_value', 
-                               "total_portfolio_value", "position", "cumulative_shares", 
-                               "PnL", "predicted_signal"]]
+        return self.portfolio[
+            [
+                "DATE",
+                "CLOSE",
+                "RETURNS",
+                "cash_on_hand",
+                "share_value",
+                "total_portfolio_value",
+                "position",
+                "cumulative_shares",
+                "PnL",
+                "predicted_signal",
+                'p_sell',
+                'p_hold',
+                'p_buy',
+                'graph_signal'
+            ]
+        ]
+
 
 class PortfolioPredictionRF:
     def __init__(
@@ -137,7 +190,7 @@ class PortfolioPredictionRF:
         stock_id: str,
         test_start_date: str,
         model_path: str,
-        train_end_date: str = '2024-01-01',
+        train_end_date: str = "2024-01-01",
         start_date: str = "2015-01-01",
         initial_investment: int = 10000,
         share_volume: int = 5,
@@ -166,12 +219,12 @@ class PortfolioPredictionRF:
 
         self.model = self.load_model(model_path)
         self.portfolio = pd.DataFrame()
-        self.scaler = StandardScaler().set_output(transform='pandas')
+        self.scaler = StandardScaler().set_output(transform="pandas")
 
         self.initial_investment = initial_investment
         self.share_volume = share_volume
 
-    def load_model(self, model_path: str = 'assets/xgb.pkl'):
+    def load_model(self, model_path: str = "assets/xgb.pkl"):
         """
         Load a model from a pickle file.
 
@@ -181,7 +234,7 @@ class PortfolioPredictionRF:
         Returns:
             model: The loaded model.
         """
-        with open(model_path, 'rb') as file:
+        with open(model_path, "rb") as file:
             model = pickle.load(file)
         return model
 
@@ -192,25 +245,66 @@ class PortfolioPredictionRF:
         Returns:
             np.ndarray: Test set features.
         """
-        self.df = self.df[(self.df.ID == self.stock_id) & (self.df.DATE >= self.start_date)].sort_values('DATE')
+        self.df = self.df[(self.df.ID == self.stock_id) & (self.df.DATE >= self.start_date)].sort_values("DATE")
         self.df.dropna(inplace=True)
 
         self.df["label"] = (self.df["RETURNS"] > 0).astype(int).values
 
         features = [
-        'CLOSE', 'VOLUME', 'HIGH', 'VOLATILITY_90D', 'CLOSE_SMA_3D', 'CLOSE_EWMA_3D', 
-        'VOLATILITY_90D_SMA_3D', 'VOLATILITY_90D_EWMA_3D', 'CLOSE_SMA_9D', 'CLOSE_EWMA_9D', 
-        'VOLATILITY_90D_SMA_9D', 'VOLATILITY_90D_EWMA_9D', 'CLOSE_SMA_21D', 'CLOSE_EWMA_21D', 
-        'VOLATILITY_90D_SMA_21D', 'VOLATILITY_90D_EWMA_21D', 'CLOSE_SMA_50D', 'CLOSE_EWMA_50D', 
-        'VOLATILITY_90D_SMA_50D', 'VOLATILITY_90D_EWMA_50D', 'CLOSE_SMA_65D', 'CLOSE_EWMA_65D', 
-        'VOLATILITY_90D_SMA_65D', 'VOLATILITY_90D_EWMA_65D', 'CLOSE_SMA_120D', 'CLOSE_EWMA_120D', 
-        'VOLATILITY_90D_SMA_120D', 'VOLATILITY_90D_EWMA_120D', 'CLOSE_SMA_360D', 'CLOSE_EWMA_360D', 
-        'VOLATILITY_90D_SMA_360D', 'VOLATILITY_90D_EWMA_360D', 'CLOSE_ROC_3D', 
-        'HIGH_ROC_3D', 'VOLATILITY_90D_ROC_3D', 'CLOSE_ROC_9D', 'HIGH_ROC_9D', 'VOLATILITY_90D_ROC_9D', 
-        'CLOSE_ROC_21D', 'HIGH_ROC_21D', 'VOLATILITY_90D_ROC_21D', 'CLOSE_ROC_50D', 'HIGH_ROC_50D', 
-        'VOLATILITY_90D_ROC_50D', 'CLOSE_ROC_65D', 'HIGH_ROC_65D', 'VOLATILITY_90D_ROC_65D', 
-        'CLOSE_ROC_120D', 'HIGH_ROC_120D', 'VOLATILITY_90D_ROC_120D', 'CLOSE_ROC_360D', 'HIGH_ROC_360D', 
-        'VOLATILITY_90D_ROC_360D'
+            "CLOSE",
+            "VOLUME",
+            "HIGH",
+            "RETURNS",
+            "VOLATILITY_90D",
+            "CLOSE_SMA_3D",
+            "CLOSE_EWMA_3D",
+            "VOLATILITY_90D_SMA_3D",
+            "VOLATILITY_90D_EWMA_3D",
+            "CLOSE_SMA_9D",
+            "CLOSE_EWMA_9D",
+            "VOLATILITY_90D_SMA_9D",
+            "VOLATILITY_90D_EWMA_9D",
+            "CLOSE_SMA_21D",
+            "CLOSE_EWMA_21D",
+            "VOLATILITY_90D_SMA_21D",
+            "VOLATILITY_90D_EWMA_21D",
+            "CLOSE_SMA_50D",
+            "CLOSE_EWMA_50D",
+            "VOLATILITY_90D_SMA_50D",
+            "VOLATILITY_90D_EWMA_50D",
+            "CLOSE_SMA_65D",
+            "CLOSE_EWMA_65D",
+            "VOLATILITY_90D_SMA_65D",
+            "VOLATILITY_90D_EWMA_65D",
+            "CLOSE_SMA_120D",
+            "CLOSE_EWMA_120D",
+            "VOLATILITY_90D_SMA_120D",
+            "VOLATILITY_90D_EWMA_120D",
+            "CLOSE_SMA_360D",
+            "CLOSE_EWMA_360D",
+            "VOLATILITY_90D_SMA_360D",
+            "VOLATILITY_90D_EWMA_360D",
+            "CLOSE_ROC_3D",
+            "HIGH_ROC_3D",
+            "VOLATILITY_90D_ROC_3D",
+            "CLOSE_ROC_9D",
+            "HIGH_ROC_9D",
+            "VOLATILITY_90D_ROC_9D",
+            "CLOSE_ROC_21D",
+            "HIGH_ROC_21D",
+            "VOLATILITY_90D_ROC_21D",
+            "CLOSE_ROC_50D",
+            "HIGH_ROC_50D",
+            "VOLATILITY_90D_ROC_50D",
+            "CLOSE_ROC_65D",
+            "HIGH_ROC_65D",
+            "VOLATILITY_90D_ROC_65D",
+            "CLOSE_ROC_120D",
+            "HIGH_ROC_120D",
+            "VOLATILITY_90D_ROC_120D",
+            "CLOSE_ROC_360D",
+            "HIGH_ROC_360D",
+            "VOLATILITY_90D_ROC_360D",
         ]
 
         test_df = self.df[self.df["DATE"] >= self.test_start_date]
@@ -228,11 +322,7 @@ class PortfolioPredictionRF:
         Returns:
             pd.DataFrame: Portfolio performance metrics.
         """
-        self.portfolio = (
-            self.df[["DATE", "CLOSE", "RETURNS"]]
-            .loc[self.df["DATE"] >= self.test_start_date]
-            .copy()
-        )
+        self.portfolio = self.df[["DATE", "CLOSE", "RETURNS"]].loc[self.df["DATE"] >= self.test_start_date].copy()
 
         self.portfolio.sort_values(by="DATE", inplace=True)
         self.portfolio.reset_index(drop=True, inplace=True)
@@ -253,14 +343,21 @@ class PortfolioPredictionRF:
         # Iterate through the DataFrame to update each row
         for i in range(1, len(self.portfolio)):
             self.portfolio.iloc[i] = update_portfolio_rf(
-                self.portfolio.iloc[i], 
-                self.portfolio.iloc[i - 1], 
-                self.initial_investment, 
-                self.share_volume
+                self.portfolio.iloc[i], self.portfolio.iloc[i - 1], self.initial_investment, self.share_volume
             )
 
         # Return the relevant columns
-        return self.portfolio[['DATE', 'CLOSE', 'RETURNS','cash_on_hand', 'share_value', 
-                               "total_portfolio_value", "position", "cumulative_shares", 
-                               "PnL", "predicted_signal"]]
-
+        return self.portfolio[
+            [
+                "DATE",
+                "CLOSE",
+                "RETURNS",
+                "cash_on_hand",
+                "share_value",
+                "total_portfolio_value",
+                "position",
+                "cumulative_shares",
+                "PnL",
+                "predicted_signal",
+            ]
+        ]

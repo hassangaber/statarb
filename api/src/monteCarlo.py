@@ -1,10 +1,12 @@
 import numpy as np
 import pandas as pd
 
+
 def mcVaR(returns: pd.Series, alpha: int = 5) -> float:
     """Calculate the Value at Risk (VaR) at the given alpha percentile."""
     var_value = np.percentile(returns, alpha)
     return var_value
+
 
 def mcCVaR(returns: pd.Series, alpha: int = 5) -> float:
     """Calculate the Conditional Value at Risk (CVaR) at the given alpha percentile."""

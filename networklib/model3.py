@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
+
 class TemporalTradingSignalNet(nn.Module):
     def __init__(self, input_dim=16, hidden_dim=64, output_dim=1, kernel_size=3):
         super(TemporalTradingSignalNet, self).__init__()
@@ -12,7 +13,7 @@ class TemporalTradingSignalNet(nn.Module):
         self.fc2 = nn.Linear(hidden_dim, output_dim)
         self.relu = nn.ReLU()
         self.tanh = nn.Tanh()
-        
+
         # Initialize weights
         self._initialize_weights()
 
@@ -22,17 +23,17 @@ class TemporalTradingSignalNet(nn.Module):
             x = x.unsqueeze(2)  # Shape becomes (batch_size, num_features, 1)
         elif x.dim() == 3:  # Permute to (batch_size, num_features, sequence_length)
             x = x.permute(0, 2, 1)
-        
+
         x = self.conv1(x)
         x = self.relu(x)
         x = self.conv2(x)
         x = self.relu(x)
-        
+
         x = self.adaptivepool(x)  # Apply adaptive pooling
-        
+
         # Flatten the output for the fully connected layer
         x = x.view(x.size(0), -1)
-        
+
         x = self.fc1(x)
         x = self.relu(x)
         x = self.fc2(x)
@@ -51,4 +52,3 @@ class TemporalTradingSignalNet(nn.Module):
         nn.init.zeros_(self.conv2.bias)
         nn.init.zeros_(self.fc1.bias)
         nn.init.zeros_(self.fc2.bias)
-
