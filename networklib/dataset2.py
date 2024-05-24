@@ -51,7 +51,7 @@ class TimeSeriesDataset(Dataset):
             stock_data[self.features] = self.scalers[stock_id].transform(stock_data[self.features])
 
             # Calculate future returns (log returns over the horizon)
-            #stock_data["future_returns"] = stock_data["RETURNS"].diff(periods=self.horizon)
+            stock_data["delta_RETURNS"] = stock_data["RETURNS"].diff(periods=self.horizon)
 
             # Calculate rolling indicators for momentum and volatility
             stock_data["momentum"] = stock_data["RETURNS"].rolling(window=self.horizon).mean()
@@ -59,7 +59,7 @@ class TimeSeriesDataset(Dataset):
             # stock_data['volatility'] = np.sqrt(realized_variance)
 
             # Define the threshold based on volatility
-            #threshold = self.tau * stock_data["VOLATILITY_90D"]
+            threshold = self.tau * stock_data["VOLATILITY_90D"]
 
             stock_data.dropna(inplace=True)
 
@@ -68,11 +68,11 @@ class TimeSeriesDataset(Dataset):
 
             # Calculate labels based on future returns and other indicators
             conditions = [
-                #(stock_data["future_returns"] > threshold)
+                (stock_data["delta_RETURNS"] > threshold)
                  (stock_data["momentum"] > 0)
                 & (stock_data["CLOSE_SMA_3D"] > stock_data["CLOSE_SMA_9D"])
                 & (stock_data["CLOSE_SMA_9D"] > stock_data["CLOSE_SMA_21D"]),
-                #(stock_data["future_returns"] < -threshold)
+                (stock_data["delta_RETURNS"] < -threshold)
                  (stock_data["momentum"] < 0)
                 & (stock_data["CLOSE_SMA_3D"] < stock_data["CLOSE_SMA_9D"])
                 & (stock_data["CLOSE_SMA_9D"] < stock_data["CLOSE_SMA_21D"])

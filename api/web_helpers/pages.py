@@ -1,98 +1,145 @@
 from dash import dcc, html, dash_table
 import pandas as pd
 
+import dash_bootstrap_components as dbc
+
 
 def render_intro():
     return html.Div(
         [
-            html.H1("Hassan Gaber", style={"color": "#A020F0"}),
-            html.P(
-                "Welcome to my personal project site where I explore automated quantitative trading strategies, "
-                "demonstrating the process of strategy development and backtesting with the objective of maximizing excess returns.",
-                style={"margin": "20px 0"},
-            ),
-            html.P(
-                "I'm a new bachelor of engineering graduate with experience in data science looking to work in the Quantitative investments industry. Feel free to contact me for opportunities in data science, analytics, or quantitative development.",
-                style={"margin": "20px 0"},
-            ),
-            html.Div(
+            dbc.Row(
                 [
-                    html.A(
-                        "email",
-                        href="mailto:hassansameh90@gmail.com",
-                        target="_blank",
-                        style={"margin-right": "25px", "color": "#333"},
-                    ),
-                    html.A(
-                        "cv",
-                        href="https://drive.google.com/file/d/1wIPUDhL86DAmzJoxc_aPlWqWzqlwahU-/view?usp=sharing",
-                        target="_blank",
-                        style={"margin-right": "25px", "color": "#333"},
-                    ),
-                    html.A(
-                        "LinkedIn Profile",
-                        href="https://www.linkedin.com/in/hassansgaber/",
-                        target="_blank",
-                        style={"margin-right": "25px", "color": "#0077B5"},
-                    ),
-                    html.A(
-                        "GitHub Profile", href="https://github.com/hassangaber", target="_blank", style={"color": "#333"}
+                    dbc.Col(
+                        html.Div(
+                            [
+                                # html.Img(
+                                #     src="/assets/20240403_153245.jpg",
+                                #     style={
+                                #         "width": "150px",
+                                #         "height": "150px",
+                                #         "border-radius": "50%",
+                                #         "object-fit": "cover",
+                                #         "margin-bottom": "20px"
+                                #     },
+                                # ),
+                                html.H1("Hassan Gaber", style={"color": "#A020F0", "font-size": "48px"}),
+                                html.P(
+                                    "Welcome to my personal project site where I explore automated quantitative trading strategies, "
+                                    "demonstrating the process of strategy development and backtesting with the objective of maximizing excess returns.",
+                                    style={"margin": "20px 0", "font-size": "18px"},
+                                ),
+                                html.P(
+                                    "I'm a new bachelor of engineering graduate with experience in data science looking to work in the Quantitative investments industry. Feel free to contact me for opportunities in data science, analytics, or quantitative development.",
+                                    style={"margin": "20px 0", "font-size": "18px"},
+                                ),
+                                html.Div(
+                                    [
+                                        html.A(
+                                            "Email",
+                                            href="mailto:hassansameh90@gmail.com",
+                                            target="_blank",
+                                            className="btn btn-outline-primary btn-lg",
+                                            style={"margin-right": "10px"},
+                                        ),
+                                        html.A(
+                                            "CV",
+                                            href="https://drive.google.com/file/d/1wIPUDhL86DAmzJoxc_aPlWqWzqlwahU-/view?usp=sharing",
+                                            target="_blank",
+                                            className="btn btn-outline-primary btn-lg",
+                                            style={"margin-right": "10px"},
+                                        ),
+                                        html.A(
+                                            "LinkedIn Profile",
+                                            href="https://www.linkedin.com/in/hassansgaber/",
+                                            target="_blank",
+                                            className="btn btn-outline-primary btn-lg",
+                                            style={"margin-right": "10px"},
+                                        ),
+                                        html.A(
+                                            "GitHub Profile",
+                                            href="https://github.com/hassangaber",
+                                            target="_blank",
+                                            className="btn btn-outline-primary btn-lg",
+                                        ),
+                                    ],
+                                    style={"margin": "20px 0"},
+                                ),
+                            ],
+                            style={"text-align": "center", "padding": "20px"},
+                        ),
+                        width=12,
                     ),
                 ],
-                style={"padding": "10px", "font-size": "36px"},
+                style={"margin-bottom": "40px"},
             ),
-            html.Div(
+            dbc.Row(
                 [
-                    html.H4("Experience", style={"color": "#34495e"}),
-                    html.P(
-                        "Data Scientist Intern at PSP Investments (January 2023 – April 2024)", style={"font-weight": "bold"}
-                    ),
-                    html.Ul(
-                        [
-                            html.Li("Supported alpha generation team managing $8.5B with predictive analytics."),
-                            html.Li("Developed feature selector improving trading returns in derivatives markets."),
-                            html.Li("Wrote CNN to predict EPS surprise in PyTorch, deployed on AzureML."),
-                        ],
-                        style={"list-style-type": "square", "padding-left": "20px"},
-                    ),
-                    html.P(
-                        "Data Scientist Intern at National Bank of Canada (May 2022 – August 2022)",
-                        style={"font-weight": "bold"},
-                    ),
-                    html.Ul(
-                        [
-                            html.Li("Patented and created automatic data drift detection tool saving over $765k annually."),
-                            html.Li("Developed drift detection framework with PyTorch, AWS Sagemaker, OpenCV."),
-                        ],
-                        style={"list-style-type": "square", "padding-left": "20px"},
-                    ),
-                    html.P(
-                        "Research Assistant - Data Scientist at McGill University Health Center (September 2021 – August 2022)",
-                        style={"font-weight": "bold"},
-                    ),
-                    html.Ul(
-                        [
-                            html.Li("Innovated data computing scheme to speed up website load times by 5-fold."),
-                            html.Li(
-                                "Developed visualization methods to find new gene relationships in chronic lung diseases."
-                            ),
-                        ],
-                        style={"list-style-type": "square", "padding-left": "20px"},
+                    dbc.Col(
+                        html.Div(
+                            [
+                                html.H4("Experience", style={"color": "#34495e", "font-size": "36px"}),
+                                html.P(
+                                    "Data Scientist Intern at PSP Investments (January 2023 – April 2024)",
+                                    style={"font-weight": "bold", "font-size": "24px"},
+                                ),
+                                html.Ul(
+                                    [
+                                        html.Li("Supported alpha generation team managing $8.5B with predictive analytics."),
+                                        html.Li("Developed feature selector improving trading returns in derivatives markets."),
+                                        html.Li("Wrote CNN to predict EPS surprise in PyTorch, deployed on AzureML."),
+                                    ],
+                                    style={"list-style-type": "square", "padding-left": "20px", "font-size": "18px"},
+                                ),
+                                html.P(
+                                    "Data Scientist Intern at National Bank of Canada (May 2022 – August 2022)",
+                                    style={"font-weight": "bold", "font-size": "24px"},
+                                ),
+                                html.Ul(
+                                    [
+                                        html.Li("Patented and created automatic data drift detection tool saving over $765k annually."),
+                                        html.Li("Developed drift detection framework with PyTorch, AWS Sagemaker, OpenCV."),
+                                    ],
+                                    style={"list-style-type": "square", "padding-left": "20px", "font-size": "18px"},
+                                ),
+                                html.P(
+                                    "Research Assistant - Data Scientist at McGill University Health Center (September 2021 – August 2022)",
+                                    style={"font-weight": "bold", "font-size": "24px"},
+                                ),
+                                html.Ul(
+                                    [
+                                        html.Li("Innovated data computing scheme to speed up website load times by 5-fold."),
+                                        html.Li("Developed visualization methods to find new gene relationships in chronic lung diseases."),
+                                    ],
+                                    style={"list-style-type": "square", "padding-left": "20px", "font-size": "18px"},
+                                ),
+                            ],
+                            style={"padding": "20px"},
+                        ),
+                        width=12,
                     ),
                 ],
-                style={"padding": "10px"},
+                style={"margin-bottom": "40px"},
             ),
-            html.Div(
+            dbc.Row(
                 [
-                    html.H4("Education", style={"color": "#34495e"}),
-                    html.P(
-                        "Bachelor of Engineering, Electrical Engineering, McGill University (September 2019 – April 2024)"
+                    dbc.Col(
+                        html.Div(
+                            [
+                                html.H4("Education", style={"color": "#34495e", "font-size": "36px"}),
+                                html.P(
+                                    "Bachelor of Engineering, Electrical Engineering, McGill University (September 2019 – April 2024)",
+                                    style={"font-size": "24px"},
+                                ),
+                            ],
+                            style={"padding": "20px"},
+                        ),
+                        width=12,
                     ),
                 ],
-                style={"padding": "10px", "font-weight": "bold"},
+                style={"margin-bottom": "40px"},
             ),
         ],
-        style={"padding": "20px", "font-size": "30px"},
+        style={"padding": "20px"},
     )
 
 
@@ -329,7 +376,7 @@ def render_backtest_ml(df):
                             dcc.Dropdown(
                                 id="stock-id-input",
                                 options=[{"label": i, "value": i} for i in df.ID.unique()],
-                                value="AAPL",
+                                value="NVDA",
                                 multi=False,
                                 placeholder="Select stock to backtest",
                                 style={"width": "48%", "margin-right": "4%"},
@@ -350,7 +397,7 @@ def render_backtest_ml(df):
                         [
                             dcc.Dropdown(
                                 id="model-id-input",
-                                options=[{"label": i, "value": i} for i in ["model_1", "model_2","model_3"]],
+                                options=[{"label": i, "value": i} for i in ["model_1", "model_2"]],
                                 value="model_1",
                                 multi=False,
                                 placeholder="Select model to generate trading signal",
@@ -390,8 +437,6 @@ def render_backtest_ml(df):
         ],
     )
 
-
-# Further customization of the graphs and table can be added within the callbacks or the CSS.
 
 
 def render_theory():
@@ -523,7 +568,7 @@ def render_rf(df: pd.DataFrame) -> html.Div:
                             dcc.Dropdown(
                                 id="rf-stock-id-input",
                                 options=[{"label": i, "value": i} for i in df.ID.unique()],
-                                value="AAPL",
+                                value="NVDA",
                                 multi=False,
                                 placeholder="Select stock to backtest",
                                 style={"width": "48%", "margin-right": "4%"},
@@ -586,6 +631,107 @@ def render_rf(df: pd.DataFrame) -> html.Div:
         ],
     )
 
+def render_backtest_mle(df):
+    return html.Div(
+        [
+            dcc.Markdown(
+                """
+                        ## Multi-Class Likelihood Estimation Backtest
+                        This tab allows you to backtest the model using multi-class likelihood estimation. The model processes the data using a different set of features and methodology.
+                        """,
+                style={"font-size": "18px", "line-height": "1.6"},
+                mathjax=True,
+            ),
+            html.Hr(),
+            html.Div(
+                [
+                    html.H3("Stock and Date Selection"),
+                    html.Div(
+                        [
+                            html.Label("Stock ID:"),
+                        ],
+                        style={"display": "flex", "align-items": "center", "margin-bottom": "10px"},
+                    ),
+                    html.Div(
+                        [
+                            dcc.Dropdown(
+                                id="mle-stock-id-input",
+                                options=[{"label": i, "value": i} for i in df.ID.unique()],
+                                value="NVDA",
+                                multi=False,
+                                placeholder="Select stock to backtest",
+                                style={"width": "48%", "margin-right": "4%"},
+                            ),
+                            html.Label("TRADING START: ", style={"margin-left": "5px"}),
+                            dcc.Input(id="mle-test-start-date-input", type="text", value="2024-01-02", style={"width": "48%"}),
+                        ],
+                        style={"display": "flex", "margin-bottom": "20px"},
+                    ),
+                    html.H3("Model Parameters"),
+                    html.Div(
+                        [
+                            html.Label("Signal Model:"),
+                        ],
+                        style={"display": "flex", "align-items": "center", "margin-bottom": "10px"},
+                    ),
+                    html.Div(
+                        [
+                            dcc.Dropdown(
+                                id="mle-model-id-input",
+                                options=[{"label": i, "value": i} for i in ["model_3"]],
+                                value="model_3",
+                                multi=False,
+                                placeholder="Select model to generate trading signal",
+                                style={"width": "48%", "margin-right": "2%"},
+                            ),
+                            html.Div(
+                                [
+                                    html.Label("Initial Investment:", style={"margin-left": "20px"}),
+                                    dcc.Input(
+                                        id="mle-initial-investment-input", type="text", value="10000", style={"width": "48%"}
+                                    ),
+                                ],
+                                style={"width": "48%", "margin-right": "2%"},
+                            ),
+                            html.Div(
+                                [
+                                    html.Label("Share Volume:", style={"margin-left": "20px"}),
+                                    dcc.Input(id="mle-share-volume-input", type="text", value="5", style={"width": "48%"}),
+                                ],
+                                style={"width": "48%", "margin-right": "2%"},
+                            ),
+                        ],
+                        style={"display": "flex", "margin-bottom": "20px"},
+                    ),
+                    dcc.Store(id="mle-stored-data"),  # Store for model data
+                    html.Button("Run Model", id="mle-run-model-button", style={"margin-bottom": "20px"}),
+                    dcc.Graph(id="mle-pnl-graph", config={"displayModeBar": False}),
+                    dcc.Graph(id="mle-transaction-signals-graph", config={"displayModeBar": False}),
+                    dcc.Graph(id="mle-portfolio-value-graph", config={"displayModeBar": False}),
+                    dcc.Graph(id="mle-cash-on-hand-graph", config={"displayModeBar": False}),
+                    html.Div(id="mle-stats-container"),
+                    dcc.Graph(id="mle-returns-distribution-graph", config={"displayModeBar": False}),
+                    html.Div(id="mle-table-container"),
+                    html.A("Download CSV", id="mle-download-link", download="portfolio_data.csv", href="", target="_blank"),
+                ]
+            ),
+        ],
+    )
+
+
+def render_combined_page(df:pd.DataFrame) -> html.Div:
+    return html.Div(
+        [
+            dcc.Tabs(
+                [
+                    dcc.Tab(label='3.1 Backtest with energy-based models', children=[render_backtest_ml(df)]),
+                    dcc.Tab(label='3.2 Backtest with multi-class liklihood estimation', children=[render_backtest_mle(df)]),
+                    dcc.Tab(label='3.3 Backtest with RF Approach', children=[render_rf(df)]),
+                    dcc.Tab(label='3.4 Labeling Theory', children=[render_theory()]),
+                ]
+            )
+        ]
+    )
 
 def render_hmm(df: pd.DataFrame) -> html.Div:
     pass
