@@ -96,7 +96,9 @@ def render_intro():
                                 ),
                                 html.Ul(
                                     [
-                                        html.Li("Patented and created automatic data drift detection tool saving over $765k annually."),
+                                        html.Li(
+                                            "Patented and created automatic data drift detection tool saving over $765k annually."
+                                        ),
                                         html.Li("Developed drift detection framework with PyTorch, AWS Sagemaker, OpenCV."),
                                     ],
                                     style={"list-style-type": "square", "padding-left": "20px", "font-size": "18px"},
@@ -108,7 +110,9 @@ def render_intro():
                                 html.Ul(
                                     [
                                         html.Li("Innovated data computing scheme to speed up website load times by 5-fold."),
-                                        html.Li("Developed visualization methods to find new gene relationships in chronic lung diseases."),
+                                        html.Li(
+                                            "Developed visualization methods to find new gene relationships in chronic lung diseases."
+                                        ),
                                     ],
                                     style={"list-style-type": "square", "padding-left": "20px", "font-size": "18px"},
                                 ),
@@ -406,9 +410,7 @@ def render_backtest_ml(df):
                             html.Div(
                                 [
                                     html.Label("Initial Investment:", style={"margin-left": "20px"}),
-                                    dcc.Input(
-                                        id="initial-investment-input", type="text", value="10000", style={"width": "48%"}
-                                    ),
+                                    dcc.Input(id="initial-investment-input", type="text", value="10000", style={"width": "48%"}),
                                 ],
                                 style={"width": "48%", "margin-right": "2%"},
                             ),
@@ -436,7 +438,6 @@ def render_backtest_ml(df):
             ),
         ],
     )
-
 
 
 def render_theory():
@@ -574,9 +575,7 @@ def render_rf(df: pd.DataFrame) -> html.Div:
                                 style={"width": "48%", "margin-right": "4%"},
                             ),
                             html.Label("TRADING START: ", style={"margin-left": "5px"}),
-                            dcc.Input(
-                                id="rf-test-start-date-input", type="text", value="2024-01-02", style={"width": "48%"}
-                            ),
+                            dcc.Input(id="rf-test-start-date-input", type="text", value="2024-01-02", style={"width": "48%"}),
                         ],
                         style={"display": "flex", "margin-bottom": "20px"},
                     ),
@@ -630,6 +629,7 @@ def render_rf(df: pd.DataFrame) -> html.Div:
             ),
         ],
     )
+
 
 def render_backtest_mle(df):
     return html.Div(
@@ -719,19 +719,20 @@ def render_backtest_mle(df):
     )
 
 
-def render_combined_page(df:pd.DataFrame) -> html.Div:
+def render_combined_page(df: pd.DataFrame) -> html.Div:
     return html.Div(
         [
             dcc.Tabs(
                 [
-                    dcc.Tab(label='3.1 Backtest with energy-based models', children=[render_backtest_ml(df)]),
-                    dcc.Tab(label='3.2 Backtest with multi-class liklihood estimation', children=[render_backtest_mle(df)]),
-                    dcc.Tab(label='3.3 Backtest with RF Approach', children=[render_rf(df)]),
-                    dcc.Tab(label='3.4 Labeling Theory', children=[render_theory()]),
+                    dcc.Tab(label="3.1 Backtest with energy-based models", children=[render_backtest_ml(df)]),
+                    dcc.Tab(label="3.2 Backtest with multi-class liklihood estimation", children=[render_backtest_mle(df)]),
+                    dcc.Tab(label="3.3 Backtest with RF Approach", children=[render_rf(df)]),
+                    dcc.Tab(label="3.4 Labeling Theory", children=[render_theory()]),
                 ]
             )
         ]
     )
+
 
 def render_hmm(df: pd.DataFrame) -> html.Div:
     pass

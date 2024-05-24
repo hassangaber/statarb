@@ -63,19 +63,17 @@ class TimeSeriesDataset(Dataset):
 
             stock_data.dropna(inplace=True)
 
-            #threshold = threshold.reindex(stock_data.index)
-            #stock_data["future_returns"] = stock_data["future_returns"].reindex(stock_data.index)
+            # threshold = threshold.reindex(stock_data.index)
+            # stock_data["future_returns"] = stock_data["future_returns"].reindex(stock_data.index)
 
             # Calculate labels based on future returns and other indicators
             conditions = [
-                (stock_data["delta_RETURNS"] > threshold)
-                 (stock_data["momentum"] > 0)
+                (stock_data["delta_RETURNS"] > threshold)(stock_data["momentum"] > 0)
                 & (stock_data["CLOSE_SMA_3D"] > stock_data["CLOSE_SMA_9D"])
                 & (stock_data["CLOSE_SMA_9D"] > stock_data["CLOSE_SMA_21D"]),
-                (stock_data["delta_RETURNS"] < -threshold)
-                 (stock_data["momentum"] < 0)
+                (stock_data["delta_RETURNS"] < -threshold)(stock_data["momentum"] < 0)
                 & (stock_data["CLOSE_SMA_3D"] < stock_data["CLOSE_SMA_9D"])
-                & (stock_data["CLOSE_SMA_9D"] < stock_data["CLOSE_SMA_21D"])
+                & (stock_data["CLOSE_SMA_9D"] < stock_data["CLOSE_SMA_21D"]),
             ]
             choices = [2, 0]
             stock_data["label"] = np.select(conditions, choices, default=1)
@@ -83,11 +81,11 @@ class TimeSeriesDataset(Dataset):
             self.processed_data.append(stock_data)
 
         self.processed_data = pd.concat(self.processed_data).reset_index(drop=True)
-        print(self.processed_data.label.value_counts()/self.processed_data.label.value_counts().sum())
+        print(self.processed_data.label.value_counts() / self.processed_data.label.value_counts().sum())
         temp_X = self.processed_data.drop(columns=["label"])
-        self.processed_data = self.downsample_random(temp_X, self.processed_data['label'], [0.35,0.2,0.45])
+        self.processed_data = self.downsample_random(temp_X, self.processed_data["label"], [0.35, 0.2, 0.45])
 
-        print(self.processed_data.label.value_counts()/self.processed_data.label.value_counts().sum())
+        print(self.processed_data.label.value_counts() / self.processed_data.label.value_counts().sum())
 
     def __len__(self):
         return len(self.processed_data)
@@ -96,13 +94,13 @@ class TimeSeriesDataset(Dataset):
         row = self.processed_data.iloc[idx][self.features + ["label"]].astype(np.float64)
         features = torch.tensor(row[self.features].values, dtype=torch.float)
         label = torch.tensor(row["label"], dtype=torch.long)
-        
+
         return features, label
-    
+
     def downsample_random(self, X, y, proportions):
         """
         Downsamples the signals according to the provided proportions.
-        
+
         :param X: DataFrame of features
         :param y: Series of labels (0 for sell, 1 for hold, 2 for buy)
         :param proportions: List of proportions for sell, hold, and buy signals respectively
@@ -113,27 +111,27 @@ class TimeSeriesDataset(Dataset):
         # Combine features and labels into a single DataFrame
         df = pd.concat([pd.DataFrame(X, columns=self.features), y.reset_index(drop=True)], axis=1)
         df.columns = list(df.columns[:-1]) + ["label"]
-        
+
         # Calculate the target count for each label based on the total number of samples
         total_count = len(df)
         target_counts = {label: int(total_count * proportions[i]) for i, label in enumerate([0, 1, 2])}
-        
+
         downsampled_df_list = []
-        
+
         for label, target_count in target_counts.items():
             label_df = df[df["label"] == label]
             if len(label_df) > target_count:
                 downsampled_df_list.append(label_df.sample(target_count, random_state=42))
             else:
                 downsampled_df_list.append(label_df)
-        
+
         # Concatenate all downsampled DataFrames
         df_downsampled = pd.concat(downsampled_df_list).reset_index(drop=True)
         df_downsampled = df_downsampled.sample(frac=1, random_state=42).reset_index(drop=True)  # Shuffle the DataFrame
-        
+
         X_downsampled = df_downsampled[self.features]
         y_downsampled = df_downsampled["label"]
 
-        df = pd.concat([X_downsampled,y_downsampled],axis=1)
-        
+        df = pd.concat([X_downsampled, y_downsampled], axis=1)
+
         return df

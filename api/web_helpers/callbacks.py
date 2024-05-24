@@ -19,13 +19,14 @@ from api.src.compute import compute_signal, getData
 from api.src.monteCarlo import MC
 from api.web_helpers.utils import random_color, kde_scipy
 
+
 def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
 
     ##################################################################
     """1 TIME SERIES ANALYSIS CALLBACK"""
-    @app.callback(Output("ma-selector", "style"), 
-                  [Input("data-checklist", "value")])
-    def toggle_ma_selector(selected_data:list[str]) -> dict[str,str]:
+
+    @app.callback(Output("ma-selector", "style"), [Input("data-checklist", "value")])
+    def toggle_ma_selector(selected_data: list[str]) -> dict[str, str]:
         if "SMA" in selected_data or "EWMA" in selected_data:
             return {"display": "block"}
         else:
@@ -59,9 +60,7 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
         for selected_id in selected_ids:
 
             filtered_df = df[df["ID"] == selected_id]
-            filtered_df = filtered_df[
-                (filtered_df["DATE"] >= start_date) & (filtered_df["DATE"] <= end_date)
-            ]
+            filtered_df = filtered_df[(filtered_df["DATE"] >= start_date) & (filtered_df["DATE"] <= end_date)]
 
             if "CLOSE" in selected_data:
                 traces_main.append(
@@ -120,9 +119,7 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
             if "RETURNS" in selected_data:
 
                 total_counts = len(filtered_df["RETURNS"].dropna())
-                bin_size = (
-                    np.max(filtered_df["RETURNS"]) - np.min(filtered_df["RETURNS"])
-                ) / 40
+                bin_size = (np.max(filtered_df["RETURNS"]) - np.min(filtered_df["RETURNS"])) / 40
                 histogram_scaling_factor = total_counts * bin_size
 
                 traces_returns.append(
@@ -140,9 +137,7 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
                     )
                 )
 
-                x_grid = np.linspace(
-                    np.min(filtered_df["RETURNS"]), np.max(filtered_df["RETURNS"]), 1000
-                )
+                x_grid = np.linspace(np.min(filtered_df["RETURNS"]), np.max(filtered_df["RETURNS"]), 1000)
                 pdf = kde_scipy(filtered_df["RETURNS"].dropna(), x_grid, bandwidth=0.2)
 
                 traces_returns.append(
@@ -168,9 +163,7 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
             traces_roc.append(
                 go.Scatter(
                     x=filtered_df["DATE"],
-                    y=filtered_df[
-                        f"CLOSE_ROC_{21 if len(selected_days)==0  else selected_days[0]}D"
-                    ],
+                    y=filtered_df[f"CLOSE_ROC_{21 if len(selected_days)==0  else selected_days[0]}D"],
                     mode="lines",
                     name=f"{selected_id} ROC",
                     marker=dict(color=random_color()),
@@ -227,6 +220,7 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
         )
 
     """BACKTEST WITH INDICATORS CALLBACK"""
+
     @app.callback(
         Output("trades-graph", "figure"),
         [Input("submit-button", "n_clicks")],
@@ -240,15 +234,10 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
         fig = calculate_and_plot_strategy(df, stock_id, start_date, end_date)
         return fig
 
-    def calculate_and_plot_strategy(
-        df: pd.DataFrame, stock_id: str, start_date: str, end_date: str
-    ):
+    def calculate_and_plot_strategy(df: pd.DataFrame, stock_id: str, start_date: str, end_date: str):
         """Calculate trading signals and plot results using Plotly."""
         M = df.loc[df.ID == stock_id]
-        M = M[
-            (M.DATE >= pd.to_datetime(start_date))
-            & (M.DATE <= pd.to_datetime(end_date))
-        ]
+        M = M[(M.DATE >= pd.to_datetime(start_date)) & (M.DATE <= pd.to_datetime(end_date))]
         M = compute_signal(M)
 
         M["system_returns"] = M["RETURNS"] * M["signal"]
@@ -269,16 +258,12 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
             col=1,
         )
         fig.add_trace(
-            go.Scatter(
-                x=M["DATE"], y=M["CLOSE_SMA_9D"], mode="lines", name="9-day SMA"
-            ),
+            go.Scatter(x=M["DATE"], y=M["CLOSE_SMA_9D"], mode="lines", name="9-day SMA"),
             row=1,
             col=1,
         )
         fig.add_trace(
-            go.Scatter(
-                x=M["DATE"], y=M["CLOSE_SMA_21D"], mode="lines", name="21-day SMA"
-            ),
+            go.Scatter(x=M["DATE"], y=M["CLOSE_SMA_21D"], mode="lines", name="21-day SMA"),
             row=1,
             col=1,
         )
@@ -341,17 +326,15 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
     """MONTE-CARLO CALLBACK"""
 
     @app.callback(
-    Output("monte-carlo-simulation-graph", "figure"),
-    Input("run-simulation-button", "n_clicks"),
-    State("stock-dropdown", "value"),
-    State("weights-input", "value"),
-    State("num-days-input", "value"),
-    State("initial-portfolio-input", "value"),
-    State("num-simulations-input", "value"),
+        Output("monte-carlo-simulation-graph", "figure"),
+        Input("run-simulation-button", "n_clicks"),
+        State("stock-dropdown", "value"),
+        State("weights-input", "value"),
+        State("num-days-input", "value"),
+        State("initial-portfolio-input", "value"),
+        State("num-simulations-input", "value"),
     )
-    def update_monte_carlo_simulation(
-        n_clicks, selected_stocks, weights, num_days, initial_portfolio, num_simulations
-    ):
+    def update_monte_carlo_simulation(n_clicks, selected_stocks, weights, num_days, initial_portfolio, num_simulations):
         triggered = callback_context.triggered[0]
 
         if triggered["value"] and n_clicks > 0:
@@ -361,13 +344,9 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
             endDate = dt.datetime.now()
             startDate = endDate - dt.timedelta(days=365 * 10)
 
-            _, meanReturns, covMatrix = getData(
-                df, selected_stocks, start=startDate, end=endDate
-            )
+            _, meanReturns, covMatrix = getData(df, selected_stocks, start=startDate, end=endDate)
 
-            res = run_monte_carlo_simulation(
-                num_simulations, num_days, weights, meanReturns, covMatrix, initial_portfolio
-            )
+            res = run_monte_carlo_simulation(num_simulations, num_days, weights, meanReturns, covMatrix, initial_portfolio)
 
             return res[0]
         return go.Figure()
@@ -382,8 +361,8 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
         for_plot: bool = True,
     ) -> tuple:
         global portfolio_sims
-        portfolio_sims, sharpe_ratios, weight_lists, final_values, VaR_list, CVaR_list, sigmas, sortino_ratios = (
-            MC(mc_sims, T, weights, meanReturns, covMatrix, initial_portfolio)
+        portfolio_sims, sharpe_ratios, weight_lists, final_values, VaR_list, CVaR_list, sigmas, sortino_ratios = MC(
+            mc_sims, T, weights, meanReturns, covMatrix, initial_portfolio
         )
 
         if for_plot:
@@ -396,11 +375,7 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
                 color = "green" if i in sorted_indices[:5] else "red"
                 fig.add_trace(
                     go.Scatter(
-                        x=np.arange(T),
-                        y=portfolio_sims[:, i],
-                        mode="lines",
-                        name=f"Simulation {i+1}",
-                        line=dict(color=color)
+                        x=np.arange(T), y=portfolio_sims[:, i], mode="lines", name=f"Simulation {i+1}", line=dict(color=color)
                     )
                 )
 
@@ -448,19 +423,13 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
             endDate = dt.datetime.now()
             startDate = endDate - dt.timedelta(days=365 * 13)
 
-            (_, meanReturns, covMatrix) = getData(
-                df, selected_stocks, start=startDate, end=endDate
-            )
+            (_, meanReturns, covMatrix) = getData(df, selected_stocks, start=startDate, end=endDate)
             (_, weight_lists, final_values, sharpe_ratios, VaR_list, CVaR_list, sigmas, sortino_ratios, _) = (
-                run_monte_carlo_simulation(
-                    num_simulations, num_days, weights, meanReturns, covMatrix, initial_portfolio
-                )
+                run_monte_carlo_simulation(num_simulations, num_days, weights, meanReturns, covMatrix, initial_portfolio)
             )
 
             sorted_indices = np.argsort(final_values)[::-1]
-            top_bottom_indices = np.concatenate(
-                [sorted_indices[:5], sorted_indices[-5:]]
-            )
+            top_bottom_indices = np.concatenate([sorted_indices[:5], sorted_indices[-5:]])
 
             data = [
                 {
@@ -585,9 +554,7 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
             State("initial-portfolio-input", "value"),
         ],
     )
-    def update_optimal_metrics(
-        n_clicks, target_value, simulation_figure, weights, initial_portfolio
-    ):
+    def update_optimal_metrics(n_clicks, target_value, simulation_figure, weights, initial_portfolio):
         if n_clicks is not None:
             weights = np.array([float(w.strip()) for w in weights.split(",")])
             weights /= np.sum(weights)
@@ -619,41 +586,31 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
             )
         return "Please run the simulation and set a target value to calculate metrics."
 
-
     @app.callback(
-    Output("stored-data", "data"),
-    Input("run-model-button", "n_clicks"),
-    [
-    State("stock-id-input", "value"),
-    State("model-id-input", "value"),
-    State("test-start-date-input", "value"),
-    State("initial-investment-input", "value"),
-    State("share-volume-input", "value")
-    ]
+        Output("stored-data", "data"),
+        Input("run-model-button", "n_clicks"),
+        [
+            State("stock-id-input", "value"),
+            State("model-id-input", "value"),
+            State("test-start-date-input", "value"),
+            State("initial-investment-input", "value"),
+            State("share-volume-input", "value"),
+        ],
     )
-    def handle_model_training(n_clicks, 
-                              stock_id, 
-                              model_id,
-                              test_start_date,
-                              initial_investment, 
-                              share_volume):
-        
-        if n_clicks is None or not all([stock_id,
-                                        test_start_date,
-                                        model_id,
-                                        initial_investment, 
-                                        share_volume]):
+    def handle_model_training(n_clicks, stock_id, model_id, test_start_date, initial_investment, share_volume):
+
+        if n_clicks is None or not all([stock_id, test_start_date, model_id, initial_investment, share_volume]):
             return dash.no_update
 
         initial_investment = int(initial_investment)
         share_volume = int(share_volume)
 
         model = PortfolioPrediction(
-            "assets/data.csv", 
-            stock_id, 
+            "assets/data.csv",
+            stock_id,
             test_start_date=test_start_date,
-            initial_investment=initial_investment, 
-            share_volume=share_volume
+            initial_investment=initial_investment,
+            share_volume=share_volume,
         )
 
         model.preprocess_test_data()
@@ -670,10 +627,10 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
             Output("table-container", "children"),
             Output("download-link", "href"),
             Output("returns-distribution-graph", "figure"),
-            Output("stats-container", "children")
+            Output("stats-container", "children"),
         ],
-            Input("stored-data", "data")
-        )
+        Input("stored-data", "data"),
+    )
     def update_output(data_json):
         if not data_json:
             empty_fig = go.Figure()
@@ -685,89 +642,135 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
 
         # Define the layout for smoother and more appealing graphs
         graph_layout = go.Layout(
-            title='',
-            xaxis=dict(title='Date', showgrid=True, zeroline=False),
-            yaxis=dict(title='', showgrid=True, zeroline=False),
-            hovermode='closest',
-            template='plotly_white'
+            title="",
+            xaxis=dict(title="Date", showgrid=True, zeroline=False),
+            yaxis=dict(title="", showgrid=True, zeroline=False),
+            hovermode="closest",
+            template="plotly_white",
         )
 
         # Portfolio Value Graph
         portfolio_value_fig = go.Figure(
             data=[
-                go.Scatter(x=action_df.DATE, y=action_df['total_portfolio_value'], mode='lines', name='Portfolio Value', line=dict(shape='spline', smoothing=1.3)),
-                #go.Scatter(x=action_df.DATE, y=action_df['cash_on_hand'], mode='lines', name='Cash on Hand', line=dict(shape='spline', smoothing=1.3)),
-                #go.Scatter(x=action_df.DATE, y=action_df['PnL'], mode='lines', name='PnL', line=dict(shape='spline', smoothing=1.3))
+                go.Scatter(
+                    x=action_df.DATE,
+                    y=action_df["total_portfolio_value"],
+                    mode="lines",
+                    name="Portfolio Value",
+                    line=dict(shape="spline", smoothing=1.3),
+                ),
+                # go.Scatter(x=action_df.DATE, y=action_df['cash_on_hand'], mode='lines', name='Cash on Hand', line=dict(shape='spline', smoothing=1.3)),
+                # go.Scatter(x=action_df.DATE, y=action_df['PnL'], mode='lines', name='PnL', line=dict(shape='spline', smoothing=1.3))
             ],
-            layout=graph_layout.update(title='Portfolio Value Over Time', yaxis_title='Value ($)')
+            layout=graph_layout.update(title="Portfolio Value Over Time", yaxis_title="Value ($)"),
         )
 
         cash_on_hand_fig = go.Figure(
             data=[
-                go.Scatter(x=action_df.DATE, y=action_df['cash_on_hand'], mode='lines', name='Cash on Hand', line=dict(shape='spline', smoothing=1.3))
+                go.Scatter(
+                    x=action_df.DATE,
+                    y=action_df["cash_on_hand"],
+                    mode="lines",
+                    name="Cash on Hand",
+                    line=dict(shape="spline", smoothing=1.3),
+                )
             ],
-            layout=graph_layout.update(title='Cash on Hand Over Time', yaxis_title='Value ($)')
+            layout=graph_layout.update(title="Cash on Hand Over Time", yaxis_title="Value ($)"),
         )
 
-        
         pnl_fig = go.Figure(
             data=[
-                go.Scatter(x=action_df.DATE, y=action_df['PnL'], mode='lines', name='Profit and Loss', line=dict(shape='linear', smoothing=1.3)),
-                go.Scatter(x=action_df.DATE, y=[0]*len(action_df), mode='lines', name='Break-Even Level', line=dict(color='red', dash='dash'))
+                go.Scatter(
+                    x=action_df.DATE,
+                    y=action_df["PnL"],
+                    mode="lines",
+                    name="Profit and Loss",
+                    line=dict(shape="linear", smoothing=1.3),
+                ),
+                go.Scatter(
+                    x=action_df.DATE,
+                    y=[0] * len(action_df),
+                    mode="lines",
+                    name="Break-Even Level",
+                    line=dict(color="red", dash="dash"),
+                ),
             ],
-            layout=graph_layout.update(title='PnL Over Time', yaxis_title='Value ($)')
+            layout=graph_layout.update(title="PnL Over Time", yaxis_title="Value ($)"),
         )
 
         # Transaction Signals Graph
-        
 
         transaction_signals_fig = go.Figure(
             data=[
-                go.Scatter(x=action_df.DATE, y=action_df['CLOSE'], mode='lines', name='Close Price', line=dict(shape='linear', smoothing=1.3)),
-                go.Scatter(x=action_df[action_df['predicted_signal'] >0.1].DATE, y=action_df[action_df['predicted_signal'] >0.1]['CLOSE'], mode='markers', marker=dict(color='green', size=10, symbol='triangle-up'), name='Buy Signal'),
-                go.Scatter(x=action_df[(action_df['predicted_signal'] < -0.1) & (action_df['cumulative_shares'] > 0)].DATE, y=action_df[(action_df['predicted_signal']< -0.1) & (action_df['cumulative_shares'] > 0)]['CLOSE'], mode='markers', marker=dict(color='red', size=10, symbol='triangle-down'), name='Sell Signal')
+                go.Scatter(
+                    x=action_df.DATE,
+                    y=action_df["CLOSE"],
+                    mode="lines",
+                    name="Close Price",
+                    line=dict(shape="linear", smoothing=1.3),
+                ),
+                go.Scatter(
+                    x=action_df[action_df["predicted_signal"] > 0.1].DATE,
+                    y=action_df[action_df["predicted_signal"] > 0.1]["CLOSE"],
+                    mode="markers",
+                    marker=dict(color="green", size=10, symbol="triangle-up"),
+                    name="Buy Signal",
+                ),
+                go.Scatter(
+                    x=action_df[(action_df["predicted_signal"] < -0.1) & (action_df["cumulative_shares"] > 0)].DATE,
+                    y=action_df[(action_df["predicted_signal"] < -0.1) & (action_df["cumulative_shares"] > 0)]["CLOSE"],
+                    mode="markers",
+                    marker=dict(color="red", size=10, symbol="triangle-down"),
+                    name="Sell Signal",
+                ),
             ],
-            layout=graph_layout.update(title='Transaction Signals Over Time', yaxis_title='Close Price (US$)')
+            layout=graph_layout.update(title="Transaction Signals Over Time", yaxis_title="Close Price (US$)"),
         )
 
         # CSV Download Link
-        csv_string = action_df.reset_index().to_csv(index=False, encoding='utf-8')
+        csv_string = action_df.reset_index().to_csv(index=False, encoding="utf-8")
         csv_string = "data:text/csv;charset=utf-8," + urllib.parse.quote(csv_string)
 
         # Format Floats
         def format_floats(df):
-            float_cols = df.select_dtypes(include=['float']).columns
+            float_cols = df.select_dtypes(include=["float"]).columns
             for col in float_cols:
-                df[col] = df[col].map('{:.4f}'.format)
+                df[col] = df[col].map("{:.4f}".format)
             return df
 
         formatted_df = format_floats(action_df.copy())
 
-        formatted_df = formatted_df.drop(columns=['graph_signal','predicted_signal']) if 'graph_signal' in formatted_df.columns.to_list() else formatted_df
+        formatted_df = (
+            formatted_df.drop(columns=["graph_signal", "predicted_signal"])
+            if "graph_signal" in formatted_df.columns.to_list()
+            else formatted_df
+        )
 
         # Data Table with compact formatting and bold column names
         data_table = dash_table.DataTable(
-            data=formatted_df.reset_index().to_dict('records'),
-            columns=[{"name": i, "id": i, "deletable": False, "renamable": False, "editable": False} for i in formatted_df.columns],
-            style_table={'overflowX': 'auto', 'maxHeight': '500px', 'overflowY': 'auto'},
-            style_cell={'padding': '5px', 'whiteSpace': 'normal', 'height': 'auto', 'fontSize': 12},
-            style_header={'fontWeight': 'bold', 'fontSize': 14},
+            data=formatted_df.reset_index().to_dict("records"),
+            columns=[
+                {"name": i, "id": i, "deletable": False, "renamable": False, "editable": False} for i in formatted_df.columns
+            ],
+            style_table={"overflowX": "auto", "maxHeight": "500px", "overflowY": "auto"},
+            style_cell={"padding": "5px", "whiteSpace": "normal", "height": "auto", "fontSize": 12},
+            style_header={"fontWeight": "bold", "fontSize": 14},
             export_format="csv",
-            export_headers="display"
+            export_headers="display",
         )
 
         # Distribution of Returns
-        returns = action_df['RETURNS'].dropna()
+        returns = action_df["RETURNS"].dropna()
         kde = gaussian_kde(returns)
         x = np.linspace(returns.min(), returns.max(), 1000)
         y = kde(x)
 
         returns_distribution_fig = go.Figure(
             data=[
-                go.Histogram(x=returns, nbinsx=150, name='Returns Histogram', opacity=0.5, histnorm='probability density'),
-                go.Scatter(x=x, y=y, mode='lines', name='Returns KDE', line=dict(shape='spline', smoothing=1.3))
+                go.Histogram(x=returns, nbinsx=150, name="Returns Histogram", opacity=0.5, histnorm="probability density"),
+                go.Scatter(x=x, y=y, mode="lines", name="Returns KDE", line=dict(shape="spline", smoothing=1.3)),
             ],
-            layout=graph_layout.update(title='KDE and Histogram of Returns', xaxis_title='Returns', yaxis_title='Density')
+            layout=graph_layout.update(title="KDE and Histogram of Returns", xaxis_title="Returns", yaxis_title="Density"),
         )
         returns_distribution_fig.update_layout(height=300)
 
@@ -777,44 +780,48 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
 
         stats_container = html.Div(
             [
-                html.P(f"Mean Return: {mean_return:.4f}", style={'font-size': '18px'}),
-                html.P(f"Standard Deviation of Returns: {std_return:.4f}", style={'font-size': '18px'})
+                html.P(f"Mean Return: {mean_return:.4f}", style={"font-size": "18px"}),
+                html.P(f"Standard Deviation of Returns: {std_return:.4f}", style={"font-size": "18px"}),
             ]
         )
 
-        return portfolio_value_fig, transaction_signals_fig, cash_on_hand_fig, pnl_fig, data_table, csv_string, returns_distribution_fig, stats_container
+        return (
+            portfolio_value_fig,
+            transaction_signals_fig,
+            cash_on_hand_fig,
+            pnl_fig,
+            data_table,
+            csv_string,
+            returns_distribution_fig,
+            stats_container,
+        )
 
     @app.callback(
-    Output("rf-stored-data", "data"),
-    Input("rf-run-model-button", "n_clicks"),
-    [
-        State("rf-stock-id-input", "value"),
-        State("rf-model-id-input", "value"),
-        State("rf-test-start-date-input", "value"),
-        State("rf-initial-investment-input", "value"),
-        State("rf-share-volume-input", "value")
-    ]
+        Output("rf-stored-data", "data"),
+        Input("rf-run-model-button", "n_clicks"),
+        [
+            State("rf-stock-id-input", "value"),
+            State("rf-model-id-input", "value"),
+            State("rf-test-start-date-input", "value"),
+            State("rf-initial-investment-input", "value"),
+            State("rf-share-volume-input", "value"),
+        ],
     )
-    def handle_rf_model_training(n_clicks, 
-                                stock_id, 
-                                model_id,
-                                test_start_date,
-                                initial_investment, 
-                                share_volume):
-        
+    def handle_rf_model_training(n_clicks, stock_id, model_id, test_start_date, initial_investment, share_volume):
+
         if n_clicks is None or not all([stock_id, test_start_date, model_id, initial_investment, share_volume]):
             return dash.no_update
 
         initial_investment = int(initial_investment)
         share_volume = int(share_volume)
-        
+
         model = PortfolioPredictionRF(
-            "assets/data.csv", 
-            stock_id, 
+            "assets/data.csv",
+            stock_id,
             test_start_date=test_start_date,
-            initial_investment=initial_investment, 
+            initial_investment=initial_investment,
             share_volume=share_volume,
-            model_path='assets/xgb.pkl'
+            model_path="assets/xgb.pkl",
         )
 
         model.preprocess_test_data()
@@ -831,9 +838,9 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
             Output("rf-table-container", "children"),
             Output("rf-download-link", "href"),
             Output("rf-returns-distribution-graph", "figure"),
-            Output("rf-stats-container", "children")
+            Output("rf-stats-container", "children"),
         ],
-        Input("rf-stored-data", "data")
+        Input("rf-stored-data", "data"),
     )
     def update_rf_output(data_json):
         if not data_json:
@@ -845,76 +852,120 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
         action_df.DATE = pd.to_datetime(action_df.DATE)
 
         graph_layout = go.Layout(
-            title='',
-            xaxis=dict(title='Date', showgrid=True, zeroline=False),
-            yaxis=dict(title='', showgrid=True, zeroline=False),
-            hovermode='closest',
-            template='plotly_white'
+            title="",
+            xaxis=dict(title="Date", showgrid=True, zeroline=False),
+            yaxis=dict(title="", showgrid=True, zeroline=False),
+            hovermode="closest",
+            template="plotly_white",
         )
 
         portfolio_value_fig = go.Figure(
             data=[
-                go.Scatter(x=action_df.DATE, y=action_df['total_portfolio_value'], mode='lines', name='Portfolio Value', line=dict(shape='spline', smoothing=1.3))
+                go.Scatter(
+                    x=action_df.DATE,
+                    y=action_df["total_portfolio_value"],
+                    mode="lines",
+                    name="Portfolio Value",
+                    line=dict(shape="spline", smoothing=1.3),
+                )
             ],
-            layout=graph_layout.update(title='Portfolio Value Over Time', yaxis_title='Value ($)')
+            layout=graph_layout.update(title="Portfolio Value Over Time", yaxis_title="Value ($)"),
         )
 
         cash_on_hand_fig = go.Figure(
             data=[
-                go.Scatter(x=action_df.DATE, y=action_df['cash_on_hand'], mode='lines', name='Cash on Hand', line=dict(shape='spline', smoothing=1.3))
+                go.Scatter(
+                    x=action_df.DATE,
+                    y=action_df["cash_on_hand"],
+                    mode="lines",
+                    name="Cash on Hand",
+                    line=dict(shape="spline", smoothing=1.3),
+                )
             ],
-            layout=graph_layout.update(title='Cash on Hand Over Time', yaxis_title='Value ($)')
+            layout=graph_layout.update(title="Cash on Hand Over Time", yaxis_title="Value ($)"),
         )
 
         pnl_fig = go.Figure(
             data=[
-                go.Scatter(x=action_df.DATE, y=action_df['PnL'], mode='lines', name='Profit and Loss', line=dict(shape='linear', smoothing=1.3)),
-                go.Scatter(x=action_df.DATE, y=[0]*len(action_df), mode='lines', name='Break-Even Level', line=dict(color='red', dash='dash'))
+                go.Scatter(
+                    x=action_df.DATE,
+                    y=action_df["PnL"],
+                    mode="lines",
+                    name="Profit and Loss",
+                    line=dict(shape="linear", smoothing=1.3),
+                ),
+                go.Scatter(
+                    x=action_df.DATE,
+                    y=[0] * len(action_df),
+                    mode="lines",
+                    name="Break-Even Level",
+                    line=dict(color="red", dash="dash"),
+                ),
             ],
-            layout=graph_layout.update(title='PnL Over Time', yaxis_title='Value ($)')
+            layout=graph_layout.update(title="PnL Over Time", yaxis_title="Value ($)"),
         )
 
         transaction_signals_fig = go.Figure(
             data=[
-                go.Scatter(x=action_df.DATE, y=action_df['CLOSE'], mode='lines', name='Close Price', line=dict(shape='linear', smoothing=1.3)),
-                go.Scatter(x=action_df[action_df['predicted_signal'] ==2].DATE, y=action_df[action_df['predicted_signal'] ==2]['CLOSE'], mode='markers', marker=dict(color='green', size=10, symbol='triangle-up'), name='Buy Signal'),
-                go.Scatter(x=action_df[(action_df['predicted_signal'] ==0) & (action_df['cumulative_shares'] > 0)].DATE, y=action_df[(action_df['predicted_signal'] ==0) & (action_df['cumulative_shares'] > 0)]['CLOSE'], mode='markers', marker=dict(color='red', size=10, symbol='triangle-down'), name='Sell Signal')
+                go.Scatter(
+                    x=action_df.DATE,
+                    y=action_df["CLOSE"],
+                    mode="lines",
+                    name="Close Price",
+                    line=dict(shape="linear", smoothing=1.3),
+                ),
+                go.Scatter(
+                    x=action_df[action_df["predicted_signal"] == 2].DATE,
+                    y=action_df[action_df["predicted_signal"] == 2]["CLOSE"],
+                    mode="markers",
+                    marker=dict(color="green", size=10, symbol="triangle-up"),
+                    name="Buy Signal",
+                ),
+                go.Scatter(
+                    x=action_df[(action_df["predicted_signal"] == 0) & (action_df["cumulative_shares"] > 0)].DATE,
+                    y=action_df[(action_df["predicted_signal"] == 0) & (action_df["cumulative_shares"] > 0)]["CLOSE"],
+                    mode="markers",
+                    marker=dict(color="red", size=10, symbol="triangle-down"),
+                    name="Sell Signal",
+                ),
             ],
-            layout=graph_layout.update(title='Transaction Signals Over Time', yaxis_title='Close Price (US$)')
+            layout=graph_layout.update(title="Transaction Signals Over Time", yaxis_title="Close Price (US$)"),
         )
 
-        csv_string = action_df.reset_index().to_csv(index=False, encoding='utf-8')
+        csv_string = action_df.reset_index().to_csv(index=False, encoding="utf-8")
         csv_string = "data:text/csv;charset=utf-8," + urllib.parse.quote(csv_string)
 
         def format_floats(df):
-            float_cols = df.select_dtypes(include=['float']).columns
+            float_cols = df.select_dtypes(include=["float"]).columns
             for col in float_cols:
-                df[col] = df[col].map('{:.4f}'.format)
+                df[col] = df[col].map("{:.4f}".format)
             return df
 
         formatted_df = format_floats(action_df.copy())
 
         data_table = dash_table.DataTable(
-            data=formatted_df.reset_index().to_dict('records'),
-            columns=[{"name": i, "id": i, "deletable": False, "renamable": False, "editable": False} for i in formatted_df.columns],
-            style_table={'overflowX': 'auto', 'maxHeight': '500px', 'overflowY': 'auto'},
-            style_cell={'padding': '5px', 'whiteSpace': 'normal', 'height': 'auto', 'fontSize': 12},
-            style_header={'fontWeight': 'bold', 'fontSize': 14},
+            data=formatted_df.reset_index().to_dict("records"),
+            columns=[
+                {"name": i, "id": i, "deletable": False, "renamable": False, "editable": False} for i in formatted_df.columns
+            ],
+            style_table={"overflowX": "auto", "maxHeight": "500px", "overflowY": "auto"},
+            style_cell={"padding": "5px", "whiteSpace": "normal", "height": "auto", "fontSize": 12},
+            style_header={"fontWeight": "bold", "fontSize": 14},
             export_format="csv",
-            export_headers="display"
+            export_headers="display",
         )
 
-        returns = action_df['RETURNS'].dropna()
+        returns = action_df["RETURNS"].dropna()
         kde = gaussian_kde(returns)
         x = np.linspace(returns.min(), returns.max(), 1000)
         y = kde(x)
 
         returns_distribution_fig = go.Figure(
             data=[
-                go.Histogram(x=returns, nbinsx=150, name='Returns Histogram', opacity=0.5, histnorm='probability density'),
-                go.Scatter(x=x, y=y, mode='lines', name='Returns KDE', line=dict(shape='spline', smoothing=1.3))
+                go.Histogram(x=returns, nbinsx=150, name="Returns Histogram", opacity=0.5, histnorm="probability density"),
+                go.Scatter(x=x, y=y, mode="lines", name="Returns KDE", line=dict(shape="spline", smoothing=1.3)),
             ],
-            layout=graph_layout.update(title='KDE and Histogram of Returns', xaxis_title='Returns', yaxis_title='Density')
+            layout=graph_layout.update(title="KDE and Histogram of Returns", xaxis_title="Returns", yaxis_title="Density"),
         )
         returns_distribution_fig.update_layout(height=300)
 
@@ -923,31 +974,35 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
 
         stats_container = html.Div(
             [
-                html.P(f"Mean Return: {mean_return:.4f}", style={'font-size': '18px'}),
-                html.P(f"Standard Deviation of Returns: {std_return:.4f}", style={'font-size': '18px'})
+                html.P(f"Mean Return: {mean_return:.4f}", style={"font-size": "18px"}),
+                html.P(f"Standard Deviation of Returns: {std_return:.4f}", style={"font-size": "18px"}),
             ]
         )
 
-        return portfolio_value_fig, transaction_signals_fig, cash_on_hand_fig, pnl_fig, data_table, csv_string, returns_distribution_fig, stats_container
+        return (
+            portfolio_value_fig,
+            transaction_signals_fig,
+            cash_on_hand_fig,
+            pnl_fig,
+            data_table,
+            csv_string,
+            returns_distribution_fig,
+            stats_container,
+        )
 
     @app.callback(
-    Output("mle-stored-data", "data"),
-    Input("mle-run-model-button", "n_clicks"),
-    [
-        State("mle-stock-id-input", "value"),
-        State("mle-model-id-input", "value"),
-        State("mle-test-start-date-input", "value"),
-        State("mle-initial-investment-input", "value"),
-        State("mle-share-volume-input", "value")
-        ]
+        Output("mle-stored-data", "data"),
+        Input("mle-run-model-button", "n_clicks"),
+        [
+            State("mle-stock-id-input", "value"),
+            State("mle-model-id-input", "value"),
+            State("mle-test-start-date-input", "value"),
+            State("mle-initial-investment-input", "value"),
+            State("mle-share-volume-input", "value"),
+        ],
     )
-    def handle_mle_model_training(n_clicks, 
-                                stock_id, 
-                                model_id,
-                                test_start_date,
-                                initial_investment, 
-                                share_volume):
-        
+    def handle_mle_model_training(n_clicks, stock_id, model_id, test_start_date, initial_investment, share_volume):
+
         if n_clicks is None or not all([stock_id, test_start_date, model_id, initial_investment, share_volume]):
             return dash.no_update
 
@@ -955,11 +1010,11 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
         share_volume = int(share_volume)
 
         model = PortfolioPredictionSOFTMAX(
-            "assets/data.csv", 
-            stock_id, 
+            "assets/data.csv",
+            stock_id,
             test_start_date=test_start_date,
-            initial_investment=initial_investment, 
-            share_volume=share_volume
+            initial_investment=initial_investment,
+            share_volume=share_volume,
         )
 
         model.preprocess_test_data()
@@ -976,9 +1031,9 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
             Output("mle-table-container", "children"),
             Output("mle-download-link", "href"),
             Output("mle-returns-distribution-graph", "figure"),
-            Output("mle-stats-container", "children")
+            Output("mle-stats-container", "children"),
         ],
-        Input("mle-stored-data", "data")
+        Input("mle-stored-data", "data"),
     )
     def update_mle_output(data_json):
         if not data_json:
@@ -990,77 +1045,121 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
         action_df.DATE = pd.to_datetime(action_df.DATE)
 
         graph_layout = go.Layout(
-            title='',
-            xaxis=dict(title='Date', showgrid=True, zeroline=False),
-            yaxis=dict(title='', showgrid=True, zeroline=False),
-            hovermode='closest',
-            template='plotly_white'
+            title="",
+            xaxis=dict(title="Date", showgrid=True, zeroline=False),
+            yaxis=dict(title="", showgrid=True, zeroline=False),
+            hovermode="closest",
+            template="plotly_white",
         )
 
         portfolio_value_fig = go.Figure(
             data=[
-                go.Scatter(x=action_df.DATE, y=action_df['total_portfolio_value'], mode='lines', name='Portfolio Value', line=dict(shape='spline', smoothing=1.3))
+                go.Scatter(
+                    x=action_df.DATE,
+                    y=action_df["total_portfolio_value"],
+                    mode="lines",
+                    name="Portfolio Value",
+                    line=dict(shape="spline", smoothing=1.3),
+                )
             ],
-            layout=graph_layout.update(title='Portfolio Value Over Time', yaxis_title='Value ($)')
+            layout=graph_layout.update(title="Portfolio Value Over Time", yaxis_title="Value ($)"),
         )
 
         cash_on_hand_fig = go.Figure(
             data=[
-                go.Scatter(x=action_df.DATE, y=action_df['cash_on_hand'], mode='lines', name='Cash on Hand', line=dict(shape='spline', smoothing=1.3))
+                go.Scatter(
+                    x=action_df.DATE,
+                    y=action_df["cash_on_hand"],
+                    mode="lines",
+                    name="Cash on Hand",
+                    line=dict(shape="spline", smoothing=1.3),
+                )
             ],
-            layout=graph_layout.update(title='Cash on Hand Over Time', yaxis_title='Value ($)')
+            layout=graph_layout.update(title="Cash on Hand Over Time", yaxis_title="Value ($)"),
         )
 
         pnl_fig = go.Figure(
             data=[
-                go.Scatter(x=action_df.DATE, y=action_df['PnL'], mode='lines', name='Profit and Loss', line=dict(shape='linear', smoothing=1.3)),
-                go.Scatter(x=action_df.DATE, y=[0]*len(action_df), mode='lines', name='Break-Even Level', line=dict(color='red', dash='dash'))
+                go.Scatter(
+                    x=action_df.DATE,
+                    y=action_df["PnL"],
+                    mode="lines",
+                    name="Profit and Loss",
+                    line=dict(shape="linear", smoothing=1.3),
+                ),
+                go.Scatter(
+                    x=action_df.DATE,
+                    y=[0] * len(action_df),
+                    mode="lines",
+                    name="Break-Even Level",
+                    line=dict(color="red", dash="dash"),
+                ),
             ],
-            layout=graph_layout.update(title='PnL Over Time', yaxis_title='Value ($)')
+            layout=graph_layout.update(title="PnL Over Time", yaxis_title="Value ($)"),
         )
 
         transaction_signals_fig = go.Figure(
             data=[
-                go.Scatter(x=action_df.DATE, y=action_df['CLOSE'], mode='lines', name='Close Price', line=dict(shape='linear', smoothing=1.3)),
-                go.Scatter(x=action_df[action_df['graph_signal'] ==2].DATE, y=action_df[action_df['graph_signal'] ==2]['CLOSE'], mode='markers', marker=dict(color='green', size=10, symbol='triangle-up'), name='Buy Signal'),
-                go.Scatter(x=action_df[(action_df['graph_signal'] ==0) & (action_df['cumulative_shares'] > 0)].DATE, y=action_df[(action_df['graph_signal'] ==0) & (action_df['cumulative_shares'] > 0)]['CLOSE'], mode='markers', marker=dict(color='red', size=10, symbol='triangle-down'), name='Sell Signal')
+                go.Scatter(
+                    x=action_df.DATE,
+                    y=action_df["CLOSE"],
+                    mode="lines",
+                    name="Close Price",
+                    line=dict(shape="linear", smoothing=1.3),
+                ),
+                go.Scatter(
+                    x=action_df[action_df["graph_signal"] == 2].DATE,
+                    y=action_df[action_df["graph_signal"] == 2]["CLOSE"],
+                    mode="markers",
+                    marker=dict(color="green", size=10, symbol="triangle-up"),
+                    name="Buy Signal",
+                ),
+                go.Scatter(
+                    x=action_df[(action_df["graph_signal"] == 0) & (action_df["cumulative_shares"] > 0)].DATE,
+                    y=action_df[(action_df["graph_signal"] == 0) & (action_df["cumulative_shares"] > 0)]["CLOSE"],
+                    mode="markers",
+                    marker=dict(color="red", size=10, symbol="triangle-down"),
+                    name="Sell Signal",
+                ),
             ],
-            layout=graph_layout.update(title='Transaction Signals Over Time', yaxis_title='Close Price (US$)')
+            layout=graph_layout.update(title="Transaction Signals Over Time", yaxis_title="Close Price (US$)"),
         )
 
-        csv_string = action_df.reset_index().to_csv(index=False, encoding='utf-8')
+        csv_string = action_df.reset_index().to_csv(index=False, encoding="utf-8")
         csv_string = "data:text/csv;charset=utf-8," + urllib.parse.quote(csv_string)
 
         def format_floats(df):
-            float_cols = df.select_dtypes(include=['float']).columns
+            float_cols = df.select_dtypes(include=["float"]).columns
             for col in float_cols:
-                df[col] = df[col].map('{:.4f}'.format)
+                df[col] = df[col].map("{:.4f}".format)
             return df
 
         formatted_df = format_floats(action_df.copy())
-        formatted_df = formatted_df.drop(columns=['predicted_signal'])
+        formatted_df = formatted_df.drop(columns=["predicted_signal"])
 
         data_table = dash_table.DataTable(
-            data=formatted_df.reset_index().to_dict('records'),
-            columns=[{"name": i, "id": i, "deletable": False, "renamable": False, "editable": False} for i in formatted_df.columns],
-            style_table={'overflowX': 'auto', 'maxHeight': '500px', 'overflowY': 'auto'},
-            style_cell={'padding': '5px', 'whiteSpace': 'normal', 'height': 'auto', 'fontSize': 12},
-            style_header={'fontWeight': 'bold', 'fontSize': 14},
+            data=formatted_df.reset_index().to_dict("records"),
+            columns=[
+                {"name": i, "id": i, "deletable": False, "renamable": False, "editable": False} for i in formatted_df.columns
+            ],
+            style_table={"overflowX": "auto", "maxHeight": "500px", "overflowY": "auto"},
+            style_cell={"padding": "5px", "whiteSpace": "normal", "height": "auto", "fontSize": 12},
+            style_header={"fontWeight": "bold", "fontSize": 14},
             export_format="csv",
-            export_headers="display"
+            export_headers="display",
         )
 
-        returns = action_df['RETURNS'].dropna()
+        returns = action_df["RETURNS"].dropna()
         kde = gaussian_kde(returns)
         x = np.linspace(returns.min(), returns.max(), 1000)
         y = kde(x)
 
         returns_distribution_fig = go.Figure(
             data=[
-                go.Histogram(x=returns, nbinsx=150, name='Returns Histogram', opacity=0.5, histnorm='probability density'),
-                go.Scatter(x=x, y=y, mode='lines', name='Returns KDE', line=dict(shape='spline', smoothing=1.3))
+                go.Histogram(x=returns, nbinsx=150, name="Returns Histogram", opacity=0.5, histnorm="probability density"),
+                go.Scatter(x=x, y=y, mode="lines", name="Returns KDE", line=dict(shape="spline", smoothing=1.3)),
             ],
-            layout=graph_layout.update(title='KDE and Histogram of Returns', xaxis_title='Returns', yaxis_title='Density')
+            layout=graph_layout.update(title="KDE and Histogram of Returns", xaxis_title="Returns", yaxis_title="Density"),
         )
         returns_distribution_fig.update_layout(height=300)
 
@@ -1069,9 +1168,18 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
 
         stats_container = html.Div(
             [
-                html.P(f"Mean Return: {mean_return:.4f}", style={'font-size': '18px'}),
-                html.P(f"Standard Deviation of Returns: {std_return:.4f}", style={'font-size': '18px'})
+                html.P(f"Mean Return: {mean_return:.4f}", style={"font-size": "18px"}),
+                html.P(f"Standard Deviation of Returns: {std_return:.4f}", style={"font-size": "18px"}),
             ]
         )
 
-        return portfolio_value_fig, transaction_signals_fig, cash_on_hand_fig, pnl_fig, data_table, csv_string, returns_distribution_fig, stats_container
+        return (
+            portfolio_value_fig,
+            transaction_signals_fig,
+            cash_on_hand_fig,
+            pnl_fig,
+            data_table,
+            csv_string,
+            returns_distribution_fig,
+            stats_container,
+        )

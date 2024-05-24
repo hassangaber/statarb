@@ -54,9 +54,7 @@ def update_portfolio(P: pd.Series, P_0: pd.Series, initial_investment: int, shar
     return P
 
 
-def update_portfolio_new(
-    P: pd.Series, P_0: pd.Series, initial_investment: int, share_volume: int, tr: float = 0.1
-) -> pd.Series:
+def update_portfolio_new(P: pd.Series, P_0: pd.Series, initial_investment: int, share_volume: int, tr: float = 0.1) -> pd.Series:
     close_price = P["CLOSE"]
     signal = P["predicted_signal"]
 
@@ -212,9 +210,7 @@ def update_portfolio_softmax(
     return P
 
 
-def update_portfolio_hmm(
-    P: pd.Series, P_0: pd.Series, initial_investment: int, share_volume: int
-) -> pd.Series:
+def update_portfolio_hmm(P: pd.Series, P_0: pd.Series, initial_investment: int, share_volume: int) -> pd.Series:
     close_price = P["CLOSE"]
     enhanced_signal = P["enhanced_signal"]
 
@@ -263,4 +259,3 @@ def update_portfolio_hmm(
             P["position"] = "hold"
 
     return P
-

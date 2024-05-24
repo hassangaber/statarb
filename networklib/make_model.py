@@ -103,14 +103,14 @@ class MakeModel:
         ]
         end_date = self.train_end_date if is_train else self.test_start_date
 
-        dataset = TimeSeriesDataset(self.df, self.stock_ids, self.start_date, end_date, self.features, horizon=5,tau=1e-6)
+        dataset = TimeSeriesDataset(self.df, self.stock_ids, self.start_date, end_date, self.features, horizon=5, tau=1e-6)
         data_loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=False)
         return data_loader
 
     def train(self) -> torch.nn.Module:
         self.train_loader = self.make_data_loader(is_train=True)
         self.model = TradingSignalNet(input_dim=len(self.features), hidden_dim=128, output_dim=3)
-        criterion = CustomTradingLoss(risk_free_rate=0.041/252)
+        criterion = CustomTradingLoss(risk_free_rate=0.041 / 252)
         optimizer = torch.optim.Adam(self.model.parameters(), lr=self.lr, weight_decay=self.weight_decay, maximize=False)
         self.model.train()
         for epoch in range(self.epochs):
@@ -119,7 +119,7 @@ class MakeModel:
                 targets = targets.float()
 
                 optimizer.zero_grad()
-                outputs = self.model(data) # .squeeze()
+                outputs = self.model(data)  # .squeeze()
                 loss = criterion(outputs, targets.long())
                 loss.backward()
                 optimizer.step()

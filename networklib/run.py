@@ -6,7 +6,7 @@ if __name__ == "__main__":
 
     P = MakeModel(
         filename="../assets/data.csv",
-        stock_ids=["NVDA","AAPL","AMZN","JNJ","XOM","GE","JPM","T","COST","TSLA","NFLX"],
+        stock_ids=["NVDA", "AAPL", "AMZN", "JNJ", "XOM", "GE", "JPM", "T", "COST", "TSLA", "NFLX"],
         train_end_date="2023-12-01",
         test_start_date="2024-02-01",
         start_date="2012-01-01",
