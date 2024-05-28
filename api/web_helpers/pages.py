@@ -1,7 +1,7 @@
 from dash import dcc, html, dash_table
 import pandas as pd
 
-import dash_bootstrap_components as dbc
+import dash_bootstrap_components as dbc  # type: ignore
 
 
 def render_intro():
@@ -225,7 +225,7 @@ def render_analyze(df):
 
 
 def render_montecarlo(df):
-    return html.Div(
+    return dbc.Container(
         [
             dcc.Markdown(
                 """
@@ -237,15 +237,13 @@ def render_montecarlo(df):
                 - **Value at Risk (VaR)**: Provides a threshold below which the portfolio value is unlikely to fall at a given confidence level, indicating the maximum expected loss under normal market conditions.\n
                 - **Conditional Value at Risk (CVaR)**: Estimates the average loss exceeding the VaR, offering insight into potential losses in worst-case scenarios.\n
                 - **Sharpe Ratio**: Measures the risk-adjusted return of the portfolio, with higher values indicating better risk-adjusted performance.\n
-                - **Sortino Ratio**: Similar to the Sharpe Ratio but focuses only on downside risk, providing a more accurate measure of risk-adjusted performance when returns are not symmetrically distributed.\
-                
+                - **Sortino Ratio**: Similar to the Sharpe Ratio but focuses only on downside risk, providing a more accurate measure of risk-adjusted performance when returns are not symmetrically distributed.\n
                 
                 These metrics assist investors in making informed decisions about risk management, asset allocation, and potential adjustments to their investment strategies.
 
                 ## Code and Params
 
                 Monte Carlo simulation is a statistical method used to model the probability of different outcomes in a process that cannot easily be predicted due to the intervention of random variables. In the context of portfolio management, it is used to simulate the future returns of a portfolio by generating a wide range of possible outcomes based on historical data and statistical properties of asset returns.
-
 
                 ### A. Define Parameters
                 - **Number of Simulations (mc_sims)**: The number of simulated paths to generate.
@@ -273,78 +271,79 @@ def render_montecarlo(df):
                 style={"font-size": "18px"},
             ),
             html.Hr(),
+            dbc.Row(
+                [
+                    dbc.Col(
+                        dcc.Dropdown(
+                            id="stock-dropdown",
+                            options=[{"label": i, "value": i} for i in df.ID.unique()],
+                            value=["AAPL", "NVDA"],
+                            multi=True,
+                            placeholder="Select stocks for your portfolio",
+                        ), width=6
+                    ),
+                ]
+            ),
             html.Div(
                 [
-                    dcc.Dropdown(
-                        id="stock-dropdown",
-                        options=[{"label": i, "value": i} for i in df.ID.unique()],
-                        value=["AAPL", "NVDA"],
-                        multi=True,
-                        placeholder="Select stocks for your portfolio",
-                    ),
-                    html.Div(
-                        [
-                            html.Label("Enter Portfolio Weights (comma separated):"),
-                            dcc.Input(id="weights-input", type="text", value="0.5, 0.5", style={"margin": "10px"}),
-                        ]
-                    ),
-                    html.Div(
-                        [
-                            html.Label("Enter Number of Days:"),
-                            dcc.Input(id="num-days-input", type="number", value=100, style={"margin": "10px"}),
-                        ]
-                    ),
-                    html.Div(
-                        [
-                            html.Label("Initial Portfolio Value ($):"),
-                            dcc.Input(
-                                id="initial-portfolio-input",
-                                type="number",
-                                value=10000,
-                                style={"margin": "10px"},
-                            ),
-                        ]
-                    ),
-                    html.Div(
-                        [
-                            html.Label("Enter Number of Simulations:"),
-                            dcc.Input(
-                                id="num-simulations-input",
-                                type="number",
-                                value=2000,
-                                style={"margin": "10px"},
-                            ),
-                        ]
-                    ),
-                    html.Div(
-                        [
-                            html.Label("Enter Target Portfolio Value ($):"),
-                            dcc.Input(
-                                id="target-value-input",
-                                type="number",
-                                value=12000,  # Default target value, adjust as needed
-                                style={"margin": "10px"},
-                            ),
-                            html.Button(
-                                "Calculate Optimal Metrics",
-                                id="calculate-metrics-button",
-                            ),
-                            html.Div(id="optimal-metrics-output"),  # Placeholder to display results
-                        ]
-                    ),
-                    html.Button("Run Simulation", id="run-simulation-button"),
-                ],
-                style={"display": "flex", "flex-direction": "column", "gap": "10px"},
+                    html.Label("Enter Portfolio Weights (comma separated):"),
+                    dcc.Input(id="weights-input", type="text", value="0.5, 0.5", style={"margin": "10px"}),
+                ]
             ),
+            html.Div(
+                [
+                    html.Label("Enter Number of Days:"),
+                    dcc.Input(id="num-days-input", type="number", value=100, style={"margin": "10px"}),
+                ]
+            ),
+            html.Div(
+                [
+                    html.Label("Initial Portfolio Value ($):"),
+                    dcc.Input(
+                        id="initial-portfolio-input",
+                        type="number",
+                        value=10000,
+                        style={"margin": "10px"},
+                    ),
+                ]
+            ),
+            html.Div(
+                [
+                    html.Label("Enter Number of Simulations:"),
+                    dcc.Input(
+                        id="num-simulations-input",
+                        type="number",
+                        value=2000,
+                        style={"margin": "10px"},
+                    ),
+                ]
+            ),
+            html.Div(
+                [
+                    html.Label("Enter Target Portfolio Value ($):"),
+                    dcc.Input(
+                        id="target-value-input",
+                        type="number",
+                        value=12000,  # Default target value, adjust as needed
+                        style={"margin": "10px"},
+                    ),
+                    html.Button(
+                        "Calculate Optimal Metrics",
+                        id="calculate-metrics-button",
+                    ),
+                    html.Div(id="optimal-metrics-output"),  # Placeholder to display results
+                ]
+            ),
+            html.Button("Run Simulation", id="run-simulation-button"),
             html.Hr(),
             dcc.Graph(id="monte-carlo-simulation-graph"),
             html.Hr(),
             dcc.Graph(id="distribution-graph"),
             html.H3("Simulation Results"),
             dash_table.DataTable(id="simulation-results-table"),
-        ]
+        ],
+        fluid=True,
     )
-
 
 def render_backtest_ml(df):
     return html.Div(
@@ -678,7 +677,7 @@ def render_backtest_mle(df):
                         [
                             dcc.Dropdown(
                                 id="mle-model-id-input",
-                                options=[{"label": i, "value": i} for i in ["model_3"]],
+                                options=[{"label": i, "value": i} for i in ["model_3","model_4"]],
                                 value="model_3",
                                 multi=False,
                                 placeholder="Select model to generate trading signal",
@@ -719,7 +718,7 @@ def render_backtest_mle(df):
     )
 
 
-def render_combined_page(df: pd.DataFrame) -> html.Div:
+def render_combined_page_ml(df: pd.DataFrame) -> html.Div:
     return html.Div(
         [
             dcc.Tabs(
@@ -733,6 +732,146 @@ def render_combined_page(df: pd.DataFrame) -> html.Div:
         ]
     )
 
+def render_simulation_tab(df):
+    return dbc.Container(
+        [
+            dbc.Row(
+                [
+                    dbc.Col(
+                        dcc.Dropdown(
+                            id="stock-dropdown",
+                            options=[{"label": i, "value": i} for i in df.ID.unique()],
+                            value=["AAPL", "NVDA"],
+                            multi=True,
+                            placeholder="Select stocks for your portfolio",
+                        ), width=6
+                    ),
+                ]
+            ),
+            html.Div(
+                [
+                    html.Label("Enter Portfolio Weights (comma separated):"),
+                    dcc.Input(id="weights-input", type="text", value="0.5, 0.5", style={"margin": "10px"}),
+                ]
+            ),
+            html.Div(
+                [
+                    html.Label("Enter Number of Days:"),
+                    dcc.Input(id="num-days-input", type="number", value=100, style={"margin": "10px"}),
+                ]
+            ),
+            html.Div(
+                [
+                    html.Label("Initial Portfolio Value ($):"),
+                    dcc.Input(
+                        id="initial-portfolio-input",
+                        type="number",
+                        value=10000,
+                        style={"margin": "10px"},
+                    ),
+                ]
+            ),
+            html.Div(
+                [
+                    html.Label("Enter Number of Simulations:"),
+                    dcc.Input(
+                        id="num-simulations-input",
+                        type="number",
+                        value=2000,
+                        style={"margin": "10px"},
+                    ),
+                ]
+            ),
+            html.Div(
+                [
+                    html.Label("Enter Target Portfolio Value ($):"),
+                    dcc.Input(
+                        id="target-value-input",
+                        type="number",
+                        value=12000,  # Default target value, adjust as needed
+                        style={"margin": "10px"},
+                    ),
+                    html.Button(
+                        "Calculate Optimal Metrics",
+                        id="calculate-metrics-button",
+                    ),
+                    html.Div(id="optimal-metrics-output"),  # Placeholder to display results
+                ]
+            ),
+            html.Button("Run Simulation", id="run-simulation-button"),
+            html.Hr(),
+            dcc.Graph(id="monte-carlo-simulation-graph"),
+            html.Hr(),
+            dcc.Graph(id="distribution-graph"),
+            html.H3("Simulation Results"),
+            dash_table.DataTable(id="simulation-results-table"),
+        ],
+        fluid=True,
+    )
+
+
+def render_theory_tab():
+    return dbc.Container(
+        [
+            dcc.Markdown(
+                """
+                ## Intro
+                This tab explains the key metrics and the Monte Carlo simulation process used to project future values of investment portfolios.
+
+                ### Key Metrics
+
+                - **Value at Risk (VaR)**: Provides a threshold below which the portfolio value is unlikely to fall at a given confidence level, indicating the maximum expected loss under normal market conditions.
+                - **Conditional Value at Risk (CVaR)**: Estimates the average loss exceeding the VaR, offering insight into potential losses in worst-case scenarios.
+                - **Sharpe Ratio**: Measures the risk-adjusted return of the portfolio, with higher values indicating better risk-adjusted performance.
+                - **Sortino Ratio**: Similar to the Sharpe Ratio but focuses only on downside risk, providing a more accurate measure of risk-adjusted performance when returns are not symmetrically distributed.
+                - **Maximum Loss**: Measures the largest single drop from peak to trough in portfolio value, providing insight into potential worst-case scenarios.
+
+                ### Monte Carlo Simulation
+
+                Monte Carlo simulation is a statistical method used to model the probability of different outcomes in a process that cannot easily be predicted due to the intervention of random variables. In the context of portfolio management, it is used to simulate the future returns of a portfolio by generating a wide range of possible outcomes based on historical data and statistical properties of asset returns.
+
+                #### Parameters
+                - **Number of Simulations (mc_sims)**: The number of simulated paths to generate.
+                - **Time Horizon (T)**: The number of time periods (e.g., days) for each simulation.
+                - **Portfolio Weights (weights)**: The allocation of the initial portfolio value across different assets.
+                - **Mean Returns (meanReturns)**: The expected returns of the assets.
+                - **Covariance Matrix (covMatrix)**: The covariance matrix of asset returns.
+                - **Initial Portfolio Value (initial_portfolio)**: The starting value of the portfolio.
+
+                #### Simulation Description
+                The simulation uses the Cholesky decomposition of the covariance matrix to ensure that the generated random returns preserve the statistical properties of the historical data.
+
+                - **Cholesky Decomposition (L)**: The covariance matrix is decomposed into a lower triangular matrix using Cholesky decomposition.
+                - **Random Samples (Z)**: Generate random samples from a standard normal distribution.
+                - **Daily Returns**: The daily returns are simulated by combining the mean returns with the random samples adjusted by the Cholesky matrix.
+                - **Portfolio Values**: The portfolio values are calculated by iteratively applying the daily returns to the initial portfolio value.
+
+                ```python
+                L = np.linalg.cholesky(covMatrix)
+                Z = np.random.normal(size=(T, len(weights)))
+                dailyReturns = meanM + np.inner(L, Z)
+                portfolio_values = np.cumprod(np.dot(weights, dailyReturns) + 1) * initial_portfolio
+                ```
+
+                """,
+                style={"font-size": "18px"},
+            )
+        ],
+        fluid=True,
+    )
+
+
+def render_montecarlo_combied(df: pd.DataFrame) -> html.Div:
+    return html.Div(
+        [
+            dcc.Tabs(
+                [
+                    dcc.Tab(label="Simulation", children=[render_simulation_tab(df)]),
+                    dcc.Tab(label="Theory", children=[render_theory_tab()]),
+                ]
+            )
+        ]
+    )
 
 def render_hmm(df: pd.DataFrame) -> html.Div:
     pass

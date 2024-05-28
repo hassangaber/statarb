@@ -253,7 +253,7 @@ class PortfolioPredictionSOFTMAX:
         self.portfolio["p_hold"] = [p[1] for p in Pr]
         self.portfolio["p_sell"] = [p[0] for p in Pr]
 
-        self.portfolio["graph_signal"] = [np.argmax(p) for p in Pr]
+        self.portfolio["graph_signal"] = [np.argmax(p) if p[1] < 0.5 else np.argmax([p[0],p[2]]) for p in Pr]
 
         # Initialize self.portfolio columns
         self.portfolio["cash_on_hand"] = self.initial_investment

@@ -1,12 +1,10 @@
 import numpy as np
 import pandas as pd
 
-
 def mcVaR(returns: pd.Series, alpha: int = 5) -> float:
     """Calculate the Value at Risk (VaR) at the given alpha percentile."""
     var_value = np.percentile(returns, alpha)
     return var_value
-
 
 def mcCVaR(returns: pd.Series, alpha: int = 5) -> float:
     """Calculate the Conditional Value at Risk (CVaR) at the given alpha percentile."""
@@ -15,7 +13,6 @@ def mcCVaR(returns: pd.Series, alpha: int = 5) -> float:
     cvar_value = returns[belowVaR].mean()
     return cvar_value
 
-
 def MC(
     mc_sims: int,
     T: int,
@@ -23,7 +20,7 @@ def MC(
     meanReturns: np.ndarray,
     covMatrix: np.ndarray,
     initial_portfolio: float,
-) -> tuple[np.ndarray, list, list, list, list, list, list, list, list]:
+) -> tuple[np.ndarray, list, list, list, list, list, list, list, list, list]:
     """
     Perform Monte Carlo simulation for portfolio returns.
 
@@ -36,7 +33,7 @@ def MC(
         initial_portfolio (float): Initial portfolio value.
 
     Returns:
-        tuple: Simulated portfolio values, Sharpe ratios, weight lists, final values, VaR, CVaR, sigmas, Sortino ratios.
+        tuple: Simulated portfolio values, Sharpe ratios, weight lists, final values, VaR, CVaR, sigmas, Sortino ratios, drawdowns, calmar ratios.
     """
     portfolio_sims = np.zeros((T, mc_sims))
     meanM = np.full((T, len(weights)), meanReturns).T
