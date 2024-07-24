@@ -10,6 +10,8 @@ data/
 # networklib/
 research.ipynb
 
+hassan_research/
+
 
 # Distribution / packaging
 .Python
