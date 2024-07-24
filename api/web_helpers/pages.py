@@ -3,149 +3,96 @@ import pandas as pd
 
 import dash_bootstrap_components as dbc  # type: ignore
 
+def create_experience_card(position: str, company: str, date: str, responsibilities: list[str]) -> dbc.Card:
+    return dbc.Card([
+        dbc.CardHeader([
+            html.H5(position, className="card-title mb-0 text-primary"),
+            html.H6(company, className="card-subtitle mt-1 text-muted"),
+        ], className="bg-light"),
+        dbc.CardBody([
+            html.P(date, className="card-text text-muted mb-3"),
+            html.Ul([html.Li(resp) for resp in responsibilities], className="mb-0")
+        ])
+    ], className="mb-4 shadow-sm")
 
 def render_intro():
-    return html.Div(
-        [
-            dbc.Row(
-                [
-                    dbc.Col(
-                        html.Div(
-                            [
-                                # html.Img(
-                                #     src="/assets/20240403_153245.jpg",
-                                #     style={
-                                #         "width": "150px",
-                                #         "height": "150px",
-                                #         "border-radius": "50%",
-                                #         "object-fit": "cover",
-                                #         "margin-bottom": "20px"
-                                #     },
-                                # ),
-                                html.H1("Hassan Gaber", style={"color": "#A020F0", "font-size": "48px"}),
-                                html.P(
-                                    "Welcome to my personal project site where I explore automated quantitative trading strategies, "
-                                    "demonstrating the process of strategy development and backtesting with the objective of maximizing excess returns.",
-                                    style={"margin": "20px 0", "font-size": "18px"},
-                                ),
-                                html.P(
-                                    "I'm a new bachelor of engineering graduate with experience in data science looking to work in the Quantitative investments industry. Feel free to contact me for opportunities in data science, analytics, or quantitative development.",
-                                    style={"margin": "20px 0", "font-size": "18px"},
-                                ),
-                                html.Div(
-                                    [
-                                        html.A(
-                                            "Email",
-                                            href="mailto:hassansameh90@gmail.com",
-                                            target="_blank",
-                                            className="btn btn-outline-primary btn-lg",
-                                            style={"margin-right": "10px"},
-                                        ),
-                                        html.A(
-                                            "CV",
-                                            href="https://drive.google.com/file/d/1wIPUDhL86DAmzJoxc_aPlWqWzqlwahU-/view?usp=sharing",
-                                            target="_blank",
-                                            className="btn btn-outline-primary btn-lg",
-                                            style={"margin-right": "10px"},
-                                        ),
-                                        html.A(
-                                            "LinkedIn Profile",
-                                            href="https://www.linkedin.com/in/hassansgaber/",
-                                            target="_blank",
-                                            className="btn btn-outline-primary btn-lg",
-                                            style={"margin-right": "10px"},
-                                        ),
-                                        html.A(
-                                            "GitHub Profile",
-                                            href="https://github.com/hassangaber",
-                                            target="_blank",
-                                            className="btn btn-outline-primary btn-lg",
-                                        ),
-                                    ],
-                                    style={"margin": "20px 0"},
-                                ),
-                            ],
-                            style={"text-align": "center", "padding": "20px"},
+    return html.Div([
+        dbc.Container([
+            dbc.Row([
+                dbc.Col(
+                    html.Div([
+                        html.H1("Hassan Gaber", className="text-primary text-center mb-4", style={"fontSize": "48px"}),
+                        html.P(
+                            "I'm a new bachelor of engineering graduate with experience in data science looking for work. "
+                            "Feel free to contact me for opportunities in data science, software engineering, or quantitative development.",
+                            className="text-center mb-4",
                         ),
-                        width=12,
-                    ),
-                ],
-                style={"margin-bottom": "40px"},
-            ),
-            dbc.Row(
-                [
-                    dbc.Col(
-                        html.Div(
-                            [
-                                html.H4("Experience", style={"color": "#34495e", "font-size": "36px"}),
-                                html.P(
-                                    "Data Scientist Intern at PSP Investments (January 2023 – April 2024)",
-                                    style={"font-weight": "bold", "font-size": "24px"},
-                                ),
-                                html.Ul(
-                                    [
-                                        html.Li("Supported alpha generation team managing $8.5B with predictive analytics."),
-                                        html.Li("Developed feature selector improving trading returns in derivatives markets."),
-                                        html.Li("Wrote CNN to predict EPS surprise in PyTorch, deployed on AzureML."),
-                                    ],
-                                    style={"list-style-type": "square", "padding-left": "20px", "font-size": "18px"},
-                                ),
-                                html.P(
-                                    "Data Scientist Intern at National Bank of Canada (May 2022 – August 2022)",
-                                    style={"font-weight": "bold", "font-size": "24px"},
-                                ),
-                                html.Ul(
-                                    [
-                                        html.Li(
-                                            "Patented and created automatic data drift detection tool saving over $765k annually."
-                                        ),
-                                        html.Li("Developed drift detection framework with PyTorch, AWS Sagemaker, OpenCV."),
-                                    ],
-                                    style={"list-style-type": "square", "padding-left": "20px", "font-size": "18px"},
-                                ),
-                                html.P(
-                                    "Research Assistant - Data Scientist at McGill University Health Center (September 2021 – August 2022)",
-                                    style={"font-weight": "bold", "font-size": "24px"},
-                                ),
-                                html.Ul(
-                                    [
-                                        html.Li("Innovated data computing scheme to speed up website load times by 5-fold."),
-                                        html.Li(
-                                            "Developed visualization methods to find new gene relationships in chronic lung diseases."
-                                        ),
-                                    ],
-                                    style={"list-style-type": "square", "padding-left": "20px", "font-size": "18px"},
-                                ),
-                            ],
-                            style={"padding": "20px"},
+                        html.P(
+                            "This is my personal website where I showcase some small projects.",
+                            className="lead text-center mb-4",
                         ),
-                        width=12,
-                    ),
-                ],
-                style={"margin-bottom": "40px"},
-            ),
-            dbc.Row(
-                [
-                    dbc.Col(
-                        html.Div(
+                        html.Div([
+                            dbc.Button("Email", href="mailto:hassansameh90@gmail.com", color="primary", className="me-2 mb-2"),
+                            dbc.Button("CV", href="https://drive.google.com/file/d/1wIPUDhL86DAmzJoxc_aPlWqWzqlwahU-/view?usp=sharing", color="primary", className="me-2 mb-2"),
+                            dbc.Button("LinkedIn", href="https://www.linkedin.com/in/hassansgaber/", color="primary", className="me-2 mb-2"),
+                            dbc.Button("GitHub", href="https://github.com/hassangaber", color="primary", className="mb-2"),
+                        ], className="d-flex justify-content-center flex-wrap mb-5"),
+                    ], className="py-5"),
+                    width=12,
+                ),
+            ]),
+            dbc.Row([
+                dbc.Col(
+                    html.Div([
+                        html.H2("Experience", className="text-primary mb-4"),
+                        create_experience_card(
+                            "Data Scientist Intern",
+                            "PSP Investments",
+                            "January 2023 – April 2024",
                             [
-                                html.H4("Education", style={"color": "#34495e", "font-size": "36px"}),
-                                html.P(
-                                    "Bachelor of Engineering, Electrical Engineering, McGill University (September 2019 – April 2024)",
-                                    style={"font-size": "24px"},
-                                ),
-                            ],
-                            style={"padding": "20px"},
+                                "Supported alpha generation team managing $8.5B with predictive analytics.",
+                                "Developed feature selector improving trading returns in derivatives markets.",
+                                "Wrote CNN to predict EPS surprise in PyTorch, deployed on AzureML.",
+                            ]
                         ),
-                        width=12,
-                    ),
-                ],
-                style={"margin-bottom": "40px"},
-            ),
-        ],
-        style={"padding": "20px"},
-    )
-
+                        create_experience_card(
+                            "Data Scientist Intern",
+                            "National Bank of Canada",
+                            "May 2022 – August 2022",
+                            [
+                                "Patented and created automatic data drift detection tool saving over $765k annually.",
+                                "Developed drift detection framework with PyTorch, AWS Sagemaker, OpenCV.",
+                            ]
+                        ),
+                        create_experience_card(
+                            "Research Assistant - Data Scientist",
+                            "McGill University Health Center",
+                            "September 2021 – August 2022",
+                            [
+                                "Innovated data computing scheme to speed up website load times by 5-fold.",
+                                "Developed visualization methods to find new gene relationships in chronic lung diseases.",
+                            ]
+                        ),
+                    ], className="py-5"),
+                    width=12,
+                ),
+            ]),
+            dbc.Row([
+                dbc.Col(
+                    html.Div([
+                        html.H2("Education", className="text-primary mb-4"),
+                        create_experience_card(
+                            "Bachelor of Engineering, Electrical Engineering",
+                            "McGill University",
+                            "September 2019 – April 2024",
+                            []  # No bullet points for education
+                        ),
+                    ], className="py-5"),
+                    width=12,
+                ),
+            ]),
+        ], fluid=True, className="px-4"),
+    ], style={"backgroundColor": "#f8f9fa"})
 
 def render_analyze(df):
     return html.Div(
