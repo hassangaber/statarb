@@ -2,14 +2,8 @@
 
 This repository contains a comprehensive dashboard for analyzing and visualizing the performance of various statistical arbitrage strategies over historical data. The dashboard supports strategies such as momentum, mean reversion, and volatility-based methods.
 
-## Features
-
-- **Data Analysis**: Tools for analyzing stock data, including statistical measures and visualizations.
-- **Machine Learning**: Implementations of machine learning models for predictive analysis.
-- **Backtesting**: Framework for backtesting different trading strategies.
-- **Interactive Dashboard**: User-friendly interface for exploring and understanding the performance of strategies.
-
 ## Installation
+
 ```bash
 git clone https://github.com/hassangaber/statarb.git
 cd statarb
@@ -23,132 +17,31 @@ After installation, you can access the dashboard locally. The dashboard allows y
 
 Visit the live site at [https://qstrat-e42f91fdc838.herokuapp.com/](https://qstrat-e42f91fdc838.herokuapp.com/)
 
-## Model and Loss Function
+## Key Components
 
-## Constructing the Target for Predicting Changes in Returns
+### Model and Loss Function
 
-In supervised learning, labeling is necessary to train models to predict future changes in returns. This dataset class creates a target label for predicting changes in returns based on a dynamic threshold calculated from rolling volatility. The labels are classified into three categories:
-- **1**: Change in returns greater than the positive threshold.
-- **-1**: Change in returns less than the negative threshold.
-- **0**: Change in returns within the threshold range.
+The dashboard uses a machine learning model to predict changes in stock returns. The model is trained on historical data and uses a custom loss function designed to optimize trading performance.
 
-## Labeling Method
+### Labeling Method
 
-### Change in Returns Calculation
-The change in returns ($$\Delta r_t$$) over a specified horizon ($$h$$) is calculated as:
+The data preparation process includes a sophisticated labeling method that categorizes historical price movements into buy, sell, or hold signals based on various technical indicators (and entropy features).
 
-$$ 
-\Delta r_t = r_t - r_{t-h} 
-$$
+### Returns (naive targets) Model Architecture
 
-where $$r_t$$ is the return at time $$t$$. We don't calculate future returns as that would introduce look-ahead bias to the data.
-
-### Rolling Indicators
-In addition to returns, several rolling indicators are calculated to enhance the predictive power of the model:
-
-- **Momentum**: Calculated as the mean of returns over the horizon:
-
-$$
-M_t = \frac{1}{h} \sum_{i=t-h+1}^{t} r_i
-$$
-
-- **Simple Moving Averages (SMA)**: For different periods to capture trends:
-
-$$
-S_{9} = \frac{1}{9} \sum_{i=t-9+1}^{t} \cdot P_i
-$$
-
-$$
-S_{21} = \frac{1}{21} \sum_{i=t-21+1}^{t} \cdot P_i
-$$
-
-### Dynamic Threshold
-The threshold ($$T$$) is defined as a multiple of the rolling volatility:
-
-$$
-B_t = T \cdot V_t 
-$$
-
-where $$V_t$$ is the rolling volatility over a 90-day period.
-
-### Label Assignment
-Labels are assigned based on the future returns and the calculated indicators:
-
-- **Buy Signal (1)**: Assigned when:
-    - Future returns are greater than the positive threshold.
-    - Momentum is positive.
-    - 9-day SMA is greater than 21-day SMA.
-
-- **Sell Signal (-1)**: Assigned when:
-    - Future returns are less than the negative threshold.
-    - Momentum is negative.
-    - 9-day SMA is less than 21-day SMA.
-
-- **Hold Signal (0)**: Assigned when the conditions for buy and sell signals are not met.
-
-The implementation in the `TimeSeriesDataset` class involves the following steps:
-
-1. **Initialize the Class**: Set the parameters and prepare the data.
-2. **Preprocess the Data**: Calculate changes in returns, rolling indicators, and assign labels.
-3. **Scale Features**: Normalize the features using `StandardScaler`.
-4. **Data Handling**: Implement methods to get the length of the dataset and retrieve individual data points.
-
-## Model Architecture and Loss Function
-
-### Convolutional Neural Network (CNN)
-The trading signal model is based on a convolutional neural network (CNN) which captures temporal patterns in the data. The architecture includes:
-- **Conv1D Layers**: To capture temporal dependencies in the time series data.
-- **Adaptive Pooling**: To reduce the sequence length to a fixed size.
-- **Fully Connected Layers**: To further process the extracted features.
-- **Activation Functions**: `ReLU` between layers and `Tanh` at the output to constrain the signals between -1 and 1.
-
-### ExcessReturnLoss Function
-The custom loss function, `ExcessReturnLoss`, is designed to maximize the Sharpe Ratio, which measures the performance of the trading signals relative to their risk. The loss function:
-- **Calculates Excess Returns**: Based on the signals and the actual returns.
-- **Computes the Sharpe Ratio**: As the mean excess return divided by the standard deviation of excess returns.
-- **Negates the Sharpe Ratio**: So that minimizing the loss function maximizes the Sharpe Ratio.
-
-By using this architecture and loss function, the model aims to generate trading signals that optimize returns relative to risk.
-
-## Monte Carlo Simulation
-
-Monte Carlo simulations are used to project the future performance of investment portfolios by running multiple scenarios based on historical data.
+The trading signal model uses a convolutional neural network (CNN) to capture temporal patterns in the stock data. The model is designed to generate optimal trading signals based on historical patterns.
 
 ### Monte Carlo Simulation
 
-1. Generate random variables  $Z \sim N(0, 1)$
-2. Calculate the Cholesky decomposition of the covariance matrix $L$ 
-3. Compute daily returns: $\text{dailyReturns} = \mu + L \cdot Z$
+The dashboard includes a Monte Carlo simulation feature that projects future portfolio performance by running multiple scenarios based on historical data. This helps in assessing potential risks and returns of different investment strategies.
 
-4. Compute portfolio values: $\text{portfolioValues} = \text{initialPortfolio} \cdot \prod_{t=1}^{T} (1 + \text{dailyReturns})$
+## Technical Details
 
-5. Calculate performance metrics (e.g., Sharpe ratio, VaR, CVaR).
+For those interested in the technical aspects of the project, the full implementation includes detailed mathematical formulas and code snippets for:
 
-## Code and Params
+- Calculating changes in returns and technical indicators
+- Implementing the returns model architecture
+- Defining the custom loss function
+- Performing Monte Carlo simulations
 
-Monte Carlo simulation is a statistical method used to model the probability of different outcomes in a process that cannot easily be predicted due to the intervention of random variables. In the context of portfolio management, it is used to simulate the future returns of a portfolio by generating a wide range of possible outcomes based on historical data and statistical properties of asset returns.
-
-
-### A. Define Parameters
-- **Number of Simulations (mc_sims)**: The number of simulated paths to generate.
-- **Time Horizon (T)**: The number of time periods (e.g., days) for each simulation.
-- **Portfolio Weights (weights)**: The allocation of the initial portfolio value across different assets.
-- **Mean Returns (meanReturns)**: The expected returns of the assets.
-- **Covariance Matrix (covMatrix)**: The covariance matrix of asset returns.
-- **Initial Portfolio Value (initial_portfolio)**: The starting value of the portfolio.
-
-### B. Simulation Description
-The simulation uses the Cholesky decomposition of the covariance matrix to ensure that the generated random returns preserve the statistical properties of the historical data.
-
-- **Cholesky Decomposition (L)**: The covariance matrix is decomposed into a lower triangular matrix using Cholesky decomposition.
-- **Random Samples (Z)**: Generate random samples from a standard normal distribution.
-- **daily returns**: The daily returns are simulated by combining the mean returns with the random samples adjusted by the Cholesky matrix.
-- **portfolio values**: The portfolio values are calculated by iteratively applying the daily returns to the initial portfolio value.
-```python
-L = np.linalg.cholesky(covMatrix)
-Z = np.random.normal(size=(T, len(weights)))
-dailyReturns = meanM + np.inner(L, Z)
-portfolio_values = np.cumprod(np.dot(weights, dailyReturns) + 1) * initial_portfolio
-```
-
-
+These details have been omitted from this README for brevity, but can be found in the source code and accompanying documentation.
