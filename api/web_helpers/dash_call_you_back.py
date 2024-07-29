@@ -3,7 +3,7 @@ from typing import Any
 import dash
 import pandas as pd
 import plotly.graph_objs as go
-from dash import html
+from dash import html, callback_context
 from dash.dependencies import Input, Output, State
 import dash_bootstrap_components as dbc
 
@@ -25,18 +25,19 @@ from api.web_helpers.callback.update_rf_output import update_rf_output
 
 def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
     @app.callback(
-        [Output("stock-graph", "figure"),
-         Output("returns-graph", "figure"),
+        [Output("price-volume-graph", "figure"),
          Output("volatility-graph", "figure"),
-         Output("roc-graph", "figure")],
+         Output("roc-graph", "figure"),
+         Output("returns-dist-graph", "figure"),
+         Output("mean-variance-graph", "figure")],
         [Input("stock-checklist", "value"),
-         Input("data-checklist", "value"),
          Input("date-range-selector", "start_date"),
          Input("date-range-selector", "end_date")]
     )
-    def update_graphs(selected_ids, selected_data, start_date, end_date):
-        return update_graph(selected_ids, selected_data, start_date, end_date, df)
-
+    def update_all_graphs(selected_ids, start_date, end_date):
+        graphs = update_graph(selected_ids, start_date, end_date, df)
+        return (graphs['price_volume'], graphs['volatility'], graphs['roc'], 
+                graphs['returns_dist'], graphs['mean_variance'])
     @app.callback(
         Output("trades-graph", "figure"),
         [Input("submit-button", "n_clicks")],

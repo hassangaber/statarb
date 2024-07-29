@@ -12,10 +12,10 @@ def export_layout(df: pd.DataFrame) -> html.Div:
                     html.Ul(
                         [
                             html.Li(html.A("Introduction", href="/")),
-                            html.Li(html.A("1 Explore Time-Series", href="/analyze")),
-                            html.Li(html.A("2 Portfolio Simulation and Optimization [Operational]", href="/montecarlo")),
-                            html.Li(html.A("3 Trading with Stochastic Returns Predictions [Research]", href="/stochastic-signals")),
-                            html.Li(html.A("4 Implementing Markov Processes for Volatility prediction [Research]", href="/markov")),
+                            html.Li(html.A("1 View Time-Series", href="/analyze")),
+                            html.Li(html.A("2 Risk Forecast", href="/montecarlo")),
+                            html.Li(html.A("3 Trading Signals", href="/stochastic-signals")),
+                            html.Li(html.A("4 Mixed Trading Signals", href="/markov")),
                         ],
                         className="sidebar-list",
                     ),

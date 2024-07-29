@@ -96,18 +96,12 @@ def render_intro():
 
 def render_analyze(df):
     return html.Div([
-        html.H1("Time Series Analysis Dashboard"),
-        html.P("Explore stock data, returns, volatility, and rate of change."),
+        html.H1("Time-Series Data View"),
+        html.P("Equity performance over time."),
         dcc.Checklist(
             id="stock-checklist",
             options=[{"label": i, "value": i} for i in df["ID"].unique()],
             value=[df["ID"].unique()[0]],
-            inline=True
-        ),
-        dcc.Checklist(
-            id="data-checklist",
-            options=[{"label": "Close Prices", "value": "CLOSE"}],
-            value=["CLOSE"],
             inline=True
         ),
         dcc.DatePickerRange(
@@ -117,12 +111,23 @@ def render_analyze(df):
             display_format="YYYY-MM-DD"
         ),
         html.Div([
-            dcc.Graph(id="stock-graph", style={"display": "inline-block", "width": "49%"}),
-            dcc.Graph(id="returns-graph", style={"display": "inline-block", "width": "49%"}),
-            dcc.Graph(id="volatility-graph", style={"display": "inline-block", "width": "49%"}),
-            dcc.Graph(id="roc-graph", style={"display": "inline-block", "width": "49%"})
+            html.Div([
+                html.P([
+                    "Mean-Variance Analysis: This graph shows the relationship between risk (x-axis) and return (y-axis) over time. ",
+                    "Each point represents a different date, with colors indicating the progression of time. ",
+                    "Points above the diagonal line suggest better risk-adjusted returns. ",
+                    "Movement towards the upper-left indicates improving risk-return profile, while lower-right suggests deterioration."
+                ], style={'fontSize': 14, 'marginBottom': 10}),
+                dcc.Graph(id="mean-variance-graph")
+            ]),
+            dcc.Graph(id="price-volume-graph"),
+            dcc.Graph(id="volatility-graph"),
+            dcc.Graph(id="roc-graph"),
+            dcc.Graph(id="returns-dist-graph"),
+            
         ])
     ])
+
 
 def render_montecarlo(df):
     return dbc.Container(
