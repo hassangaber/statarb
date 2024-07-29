@@ -95,81 +95,34 @@ def render_intro():
     ], style={"backgroundColor": "#f8f9fa"})
 
 def render_analyze(df):
-    return html.Div(
-        [
-            html.Div(
-                [
-                    html.P(
-                        "In this tab, all the raw market data can be viewed in the graph matrix representing the close price, stock returns frequency, volatility, and close price rate of change. \
-                        The purpose of this section is to provide a tab where all the raw features and engineered features can be visualized. Multiple stocks can be viewed together \
-                        and a date range can be selected for backtesting purposes.",
-                        style={"font-size": "18px"},
-                    ),
-                    html.P("FEATURES:", style={"font-size": "16px"}),
-                    html.Dl(f"{df.columns.to_list()[1:]}"),
-                    html.Hr(),
-                ]
-            ),
-            html.Div(
-                [
-                    dcc.Checklist(
-                        id="stock-checklist",
-                        options=[{"label": i, "value": i} for i in df["ID"].unique()],
-                        value=[df["ID"].unique()[0]],
-                        inline=True,
-                        style={"padding": "5px", "width": "100%", "display": "inline-block"},
-                    ),
-                ],
-                style={"width": "30%", "display": "inline-block"},
-            ),
-            html.Div(
-                [
-                    dcc.Checklist(
-                        id="data-checklist",
-                        options=[
-                            {"label": "Close Prices", "value": "CLOSE"},
-                            {"label": "Simple Moving Averages", "value": "SMA"},
-                            {"label": "Exp-Weighted Moving Averages", "value": "EWMA"},
-                            {"label": "Normalized Returns", "value": "RETURNS"},
-                        ],
-                        value=["CLOSE", "RETURNS"],
-                        inline=True,
-                        style={"padding": "5px", "width": "100%", "display": "inline-block"},
-                    ),
-                ],
-                style={"width": "70%", "display": "inline-block"},
-            ),
-            html.Div(
-                [
-                    dcc.Checklist(
-                        id="ma-day-dropdown",
-                        options=[{"label": f"{i} Days", "value": f"{i}"} for i in [3, 9, 21, 50, 65, 120, 360]],
-                        value=["21"],
-                        inline=True,
-                        style={"display": "block"},
-                    ),
-                ],
-                id="ma-selector",
-                style={"display": "none"},
-            ),
-            dcc.DatePickerRange(
-                id="date-range-selector",
-                start_date=df["DATE"].min(),
-                end_date=df["DATE"].max(),
-                display_format="YYYY-MM-DD",
-            ),
-            html.Div(
-                [
-                    dcc.Graph(id="stock-graph", style={"display": "inline-block", "width": "49%"}),
-                    dcc.Graph(id="returns-graph", style={"display": "inline-block", "width": "49%"}),
-                    dcc.Graph(id="volatility-graph", style={"display": "inline-block", "width": "49%"}),
-                    dcc.Graph(id="roc-graph", style={"display": "inline-block", "width": "49%"}),
-                ]
-            ),
-        ],
-        style={"padding": "10px"},
-    )
-
+    return html.Div([
+        html.H1("Time Series Analysis Dashboard"),
+        html.P("Explore stock data, returns, volatility, and rate of change."),
+        dcc.Checklist(
+            id="stock-checklist",
+            options=[{"label": i, "value": i} for i in df["ID"].unique()],
+            value=[df["ID"].unique()[0]],
+            inline=True
+        ),
+        dcc.Checklist(
+            id="data-checklist",
+            options=[{"label": "Close Prices", "value": "CLOSE"}],
+            value=["CLOSE"],
+            inline=True
+        ),
+        dcc.DatePickerRange(
+            id="date-range-selector",
+            start_date=df["DATE"].min(),
+            end_date=df["DATE"].max(),
+            display_format="YYYY-MM-DD"
+        ),
+        html.Div([
+            dcc.Graph(id="stock-graph", style={"display": "inline-block", "width": "49%"}),
+            dcc.Graph(id="returns-graph", style={"display": "inline-block", "width": "49%"}),
+            dcc.Graph(id="volatility-graph", style={"display": "inline-block", "width": "49%"}),
+            dcc.Graph(id="roc-graph", style={"display": "inline-block", "width": "49%"})
+        ])
+    ])
 
 def render_montecarlo(df):
     return dbc.Container(

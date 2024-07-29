@@ -24,39 +24,18 @@ from api.web_helpers.callback.update_rf_output import update_rf_output
 
 
 def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
-
-    @app.callback(Output("ma-selector", "style"), [Input("data-checklist", "value")])
-    def toggle_ma_selector_callback(selected_data: list[str]) -> dict[str, str]:
-        return toggle_ma_selector(selected_data)
-
     @app.callback(
-        [
-            Output("stock-graph", "figure"),
-            Output("returns-graph", "figure"),
-            Output("volatility-graph", "figure"),
-            Output("roc-graph", "figure"),
-        ],
-        [
-            Input("stock-checklist", "value"),
-            Input("data-checklist", "value"),
-            Input("ma-day-dropdown", "value"),
-            Input("date-range-selector", "start_date"),
-            Input("date-range-selector", "end_date"),
-        ],
+        [Output("stock-graph", "figure"),
+         Output("returns-graph", "figure"),
+         Output("volatility-graph", "figure"),
+         Output("roc-graph", "figure")],
+        [Input("stock-checklist", "value"),
+         Input("data-checklist", "value"),
+         Input("date-range-selector", "start_date"),
+         Input("date-range-selector", "end_date")]
     )
-    def update_graph_callback(
-        selected_ids: list[str],
-        selected_data: list[str],
-        selected_days: list[int],
-        start_date: str,
-        end_date: str,
-    ) -> tuple[
-        dict[str, list[go.Scatter | go.Bar]],
-        dict[str, list[go.Histogram | go.Scatter]],
-        dict[str, list[go.Scatter]],
-        dict[str, list[go.Scatter]],
-    ]:
-        return update_graph(selected_ids, selected_data, selected_days, start_date, end_date, df)
+    def update_graphs(selected_ids, selected_data, start_date, end_date):
+        return update_graph(selected_ids, selected_data, start_date, end_date, df)
 
     @app.callback(
         Output("trades-graph", "figure"),
