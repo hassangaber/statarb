@@ -28,16 +28,21 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
         [Output("price-volume-graph", "figure"),
          Output("volatility-graph", "figure"),
          Output("roc-graph", "figure"),
-         Output("returns-dist-graph", "figure"),
          Output("mean-variance-graph", "figure")],
         [Input("stock-checklist", "value"),
          Input("date-range-selector", "start_date"),
          Input("date-range-selector", "end_date")]
     )
     def update_all_graphs(selected_ids, start_date, end_date):
+        if not selected_ids:
+            return [{
+                'data': [],
+                'layout': go.Layout(title="Please select at least one stock to display graphs.")
+            }] * 4
+        
         graphs = update_graph(selected_ids, start_date, end_date, df)
-        return (graphs['price_volume'], graphs['volatility'], graphs['roc'], 
-                graphs['returns_dist'], graphs['mean_variance'])
+        return (graphs['price_volume'], graphs['volatility'], graphs['roc'], graphs['mean_variance'])
+
     @app.callback(
         Output("trades-graph", "figure"),
         [Input("submit-button", "n_clicks")],

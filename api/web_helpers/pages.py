@@ -1,6 +1,6 @@
 from dash import dcc, html, dash_table
 import pandas as pd
-
+import random
 import dash_bootstrap_components as dbc  # type: ignore
 
 def create_experience_card(position: str, company: str, date: str, responsibilities: list[str]) -> dbc.Card:
@@ -22,11 +22,6 @@ def render_intro():
                 dbc.Col(
                     html.Div([
                         html.H1("Hassan Gaber", className="text-primary text-center mb-4", style={"fontSize": "48px"}),
-                        html.P(
-                            "I'm a new bachelor of engineering graduate with experience in data science looking for work. "
-                            "Feel free to contact me for opportunities in data science, software engineering, or quantitative development.",
-                            className="text-center mb-4",
-                        ),
                         html.P(
                             "This is my personal website where I showcase some small projects.",
                             className="lead text-center mb-4",
@@ -95,13 +90,16 @@ def render_intro():
     ], style={"backgroundColor": "#f8f9fa"})
 
 def render_analyze(df):
+    all_stocks = df["ID"].unique().tolist()
+    default_stocks = ['NVDA']
+    
     return html.Div([
-        html.H1("Time-Series Data View"),
-        html.P("Equity performance over time."),
+        html.H1("Comprehensive Time Series Analysis Dashboard"),
+        html.P("Analyze multiple aspects of stock performance over time."),
         dcc.Checklist(
             id="stock-checklist",
-            options=[{"label": i, "value": i} for i in df["ID"].unique()],
-            value=[df["ID"].unique()[0]],
+            options=[{"label": i, "value": i} for i in all_stocks],
+            value=default_stocks,
             inline=True
         ),
         dcc.DatePickerRange(
@@ -111,23 +109,13 @@ def render_analyze(df):
             display_format="YYYY-MM-DD"
         ),
         html.Div([
-            html.Div([
-                html.P([
-                    "Mean-Variance Analysis: This graph shows the relationship between risk (x-axis) and return (y-axis) over time. ",
-                    "Each point represents a different date, with colors indicating the progression of time. ",
-                    "Points above the diagonal line suggest better risk-adjusted returns. ",
-                    "Movement towards the upper-left indicates improving risk-return profile, while lower-right suggests deterioration."
-                ], style={'fontSize': 14, 'marginBottom': 10}),
-                dcc.Graph(id="mean-variance-graph")
-            ]),
+            dcc.Graph(id="mean-variance-graph"),
             dcc.Graph(id="price-volume-graph"),
             dcc.Graph(id="volatility-graph"),
             dcc.Graph(id="roc-graph"),
-            dcc.Graph(id="returns-dist-graph"),
             
         ])
     ])
-
 
 def render_montecarlo(df):
     return dbc.Container(

@@ -146,7 +146,8 @@ def update_graph(selected_ids, start_date, end_date, df):
                     tickangle=45
                 )
             ),
-            hovertemplate='Risk (Std Dev): %{x:.4f}<br>Return: %{y:.2f}%<extra></extra>'
+            text=[date for date in mv_df.index],  # Add this line
+            hovertemplate='Date: %{text}<br>Risk (Std Dev): %{x:.4f}<br>Return: %{y:.2f}%<extra></extra>'  # Modify this line
         )
         
         # Add a diagonal line for the risk-return trade-off
