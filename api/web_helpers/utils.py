@@ -1,6 +1,14 @@
 from dash import html
 import dash_bootstrap_components as dbc
 
+import os
+from base64 import b64encode
+
+def get_encoded_image(image_path):
+    with open(image_path, 'rb') as image_file:
+        encoded_string = b64encode(image_file.read()).decode()
+    return f'data:image/png;base64,{encoded_string}'
+
 def _create_timeline_item(date, title, company, is_last=False) -> html.Div:
     return html.Div([
         html.Div([

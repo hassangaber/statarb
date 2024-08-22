@@ -13,8 +13,8 @@ def export_layout() -> html.Div:
                             html.Ul(
                                 [
                                     html.Li(html.A("Introduction", href="/")),
-                                    html.Li(html.A("1 Risk Models", href="/risk")),
-                                    html.Li(html.A("2 Equity Signals I", href="/eq-one")),
+                                    html.Li(html.A("1.1 Model Assumptions & Data", href="/equity-1")),
+                                    html.Li(html.A("1.2 Dynamic Target", href="/equity-2")),
                                 ],
                                 className="sidebar-list",
                             ),

@@ -1,7 +1,9 @@
+import os
 import dash_bootstrap_components as dbc
 import pandas as pd
 from dash import dcc, html
-from api.web_helpers.utils import create_experience_card, create_professional_timeline
+from api.web_helpers.utils import create_experience_card, create_professional_timeline, get_encoded_image
+from api.web_helpers.callback.rintro import notebook_to_html
 
 
 def render_intro():
@@ -93,60 +95,42 @@ def render_intro():
         ], fluid=True, className="px-3"),
     ])
 
-def render_risk(df: pd.DataFrame) -> html.Div:
+# section 1
+def render_eda() -> html.Div:
+    large_text ="""
+                # Fetching Data and Creating Model Assumptions
+
+                """
+    
+    image_paths = [
+    '/Users/hassan/Desktop/website/assets/Screen Shot 2024-08-22 at 12.24.46 AM.png',
+    '/Users/hassan/Desktop/website/assets/Screen Shot 2024-08-22 at 12.24.58 AM.png',
+    ]
+    
+    image_components = [
+        html.Div([
+            html.Img(src=get_encoded_image(path), style={'width': '100%', 'marginBottom': '20px'})
+        ]) for path in image_paths if os.path.exists(path)
+    ]
     return html.Div([
-        dbc.Container([
-            html.H1("What is risk and why do we care?", className="my-4"),
-            
-            html.Div([
-                html.H3("What is Risk?"),
-                html.P("In finance, risk refers to the possibility that an investment's actual return will differ from its expected return. "
-                    "It represents the potential for loss or underperformance. Understanding and managing risk is what ultimately gives investors confidence to invest.")
-            ], className="mb-4"),
-            
-            html.Div([
-                html.H3("Volatility: A Measure of Risk"),
-                html.P("Volatility is a statistical measure of the dispersion of returns for a given security or market index. "
-                    "It quantifies the amount of uncertainty or risk associated with the size of changes in a security's value. "
-                    "Higher volatility means that a security's value can potentially be spread out over a larger range of values -- high variance, "
-                    "indicating higher risk.")
-            ], className="mb-4"),
-            
-            dbc.Row([
-                dbc.Col([
-                    html.H4("Volatility Calculation"),
-                    dbc.Input(id="ticker-input", placeholder="Enter stock ticker (e.g., AAPL)", type="text", className="mb-2"),
-                    dbc.Button("Calculate Volatility", id="calc-volatility", color="primary", className="mb-2"),
-                    html.Div(id="volatility-output")
-                ], width=6),
-                dbc.Col([
-                    dcc.Graph(id="price-volatility-plot")
-                ], width=6)
-            ], className="mb-4"),
-            
-            html.Div([
-                html.H3("Risk Exposure: Long vs Short Positions"),
-                html.P("The direction of a trade (long or short) affects the risk exposure of an investor. "
-                    "Let's examine how different positions impact potential gains and losses.")
-            ], className="mb-4"),
-            
-            dbc.Row([
-                dbc.Col([
-                    html.H4("Long Position Simulation"),
-                    dcc.Graph(id="long-position-plot")
-                ], width=6),
-                dbc.Col([
-                    html.H4("Short Position Simulation"),
-                    dcc.Graph(id="short-position-plot")
-                ], width=6)
+        html.H1("Marco & Risk Data"),
+        dcc.Tabs([
+            dcc.Tab(label='Exploration', children=[
+                dcc.Markdown(large_text, style={'padding': '20px'})
             ]),
-            dbc.Row([
-                dbc.Col([
-                    html.Div(id="trade-risk-profile")
-                ], width=12)
-            ]) 
+            dcc.Tab(label='Notebook', children=[
+                html.Iframe(
+                srcDoc=notebook_to_html('/Users/hassan/Desktop/website/api/src/eda.ipynb'),
+                style={'width': '85%', 'height': '1000px', 'border': 'none'}
+            )
+            ]),
+            dcc.Tab(label='Some Interesting Plots', children=[
+                html.Div(image_components, style={'maxWidth': '800px', 'margin': 'auto'})
+            ]),
+            
         ])
     ])
+
 
 def render_eq1(df: pd.DataFrame) -> html.Div:
     return None
