@@ -202,10 +202,11 @@ def render_strat1() -> html.Div:
         dcc.Tabs([
             dcc.Tab(label='Making the Dataset & Hypothesis', children=[
                 dcc.Markdown(large_text, style={'padding': '20px'}), # explaining the hypothesis
-                html.Iframe(
-                srcDoc=notebook_to_html('/Users/hassan/Desktop/website/api/src/eda.ipynb'),
-                style={'width': '85%', 'height': '1000px', 'border': 'none'}
-                )
+                # html.Iframe(
+                # srcDoc=notebook_to_html('/Users/hassan/Desktop/website/api/src/eda.ipynb'),
+                # style={'width': '85%', 'height': '1000px', 'border': 'none'}
+                # )
+                html.H2("LINK TO NOTEBOOK https://github.com/hassangaber/statarb/blob/master/api/src/eda.ipynb")
             ]),
 
             dcc.Tab(label='Processing & Triple-barrier Target', children=[
