@@ -212,10 +212,10 @@ def render_strat1() -> html.Div:
         dcc.Tabs([
             dcc.Tab(label='Making the Dataset & Hypothesis', children=[
                 dcc.Markdown(large_text, style={'padding': '20px'}), # explaining the hypothesis
-                html.Iframe(
-                srcDoc=notebook_to_html('/Users/hassan/Desktop/website/api/src/eda.ipynb'),
-                style={'width': '85%', 'height': '1000px', 'border': 'none'}
-                ),
+                # html.Iframe(
+                # srcDoc=notebook_to_html('/Users/hassan/Desktop/website/api/src/eda.ipynb'),
+                # style={'width': '85%', 'height': '1000px', 'border': 'none'}
+                # ),
                 # html.Div(image_components, style={'maxWidth': '800px', 'margin': 'auto'})
             ]),
 
