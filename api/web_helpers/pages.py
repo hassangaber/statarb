@@ -96,10 +96,15 @@ def render_intro():
     ])
 
 # section 1
-def render_eda() -> html.Div:
+def render_strat1() -> html.Div:
     large_text ="""
-                # Fetching Data and Creating Model Assumptions
+                # Economic Hypothesis
 
+                
+                # Getting the Data
+
+
+                # Format of Table
                 """
     
     image_paths = [
@@ -112,20 +117,26 @@ def render_eda() -> html.Div:
             html.Img(src=get_encoded_image(path), style={'width': '100%', 'marginBottom': '20px'})
         ]) for path in image_paths if os.path.exists(path)
     ]
+
     return html.Div([
-        html.H1("Marco & Risk Data"),
+        html.H1("Generating Trading Signals for Equities with Macro & Risk Data"),
+
         dcc.Tabs([
-            dcc.Tab(label='Exploration', children=[
-                dcc.Markdown(large_text, style={'padding': '20px'})
-            ]),
-            dcc.Tab(label='Notebook', children=[
+            dcc.Tab(label='Making the Dataset & Hypothesis', children=[
+                dcc.Markdown(large_text, style={'padding': '20px'}), # explaining the hypothesis
                 html.Iframe(
                 srcDoc=notebook_to_html('/Users/hassan/Desktop/website/api/src/eda.ipynb'),
                 style={'width': '85%', 'height': '1000px', 'border': 'none'}
-            )
+                ),
+                # html.Div(image_components, style={'maxWidth': '800px', 'margin': 'auto'})
             ]),
-            dcc.Tab(label='Some Interesting Plots', children=[
-                html.Div(image_components, style={'maxWidth': '800px', 'margin': 'auto'})
+
+            dcc.Tab(label='Processing & Triple-barrier Target', children=[
+                
+            ]),
+
+            dcc.Tab(label='Some OOS Testing', children=[
+                
             ]),
             
         ])

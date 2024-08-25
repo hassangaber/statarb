@@ -6,7 +6,7 @@ from dash import Input, Output
 
 from api.web_helpers.callbacks import register_callbacks
 from api.web_helpers.layout import export_layout
-from api.web_helpers.pages import render_eq1, render_intro, render_eda
+from api.web_helpers.pages import render_eq1, render_intro, render_strat1
 
 global APP
 
@@ -28,7 +28,7 @@ def display_page(pathname) -> callable:
     if pathname == "/":
         return render_intro()
     elif pathname == "/equity-1":
-        return render_eda()
+        return render_strat1()
     elif pathname == "/equity-2":
         return 
     
