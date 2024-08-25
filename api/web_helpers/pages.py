@@ -2,8 +2,7 @@ import os
 import dash_bootstrap_components as dbc
 import pandas as pd
 from dash import dcc, html
-from api.web_helpers.utils import create_experience_card, create_professional_timeline, get_encoded_image
-from api.web_helpers.callback.rintro import notebook_to_html
+from api.web_helpers.utils import create_experience_card, create_professional_timeline
 
 
 def render_intro():
@@ -194,17 +193,7 @@ def render_strat1() -> html.Div:
                 - VOLATILITY_90D enables risk-adjusted predictions and position sizing
 
             """
-    
-    image_paths = [
-    '/Users/hassan/Desktop/website/assets/Screen Shot 2024-08-22 at 12.24.46 AM.png',
-    '/Users/hassan/Desktop/website/assets/Screen Shot 2024-08-22 at 12.24.58 AM.png',
-    ]
-    
-    image_components = [
-        html.Div([
-            html.Img(src=get_encoded_image(path), style={'width': '100%', 'marginBottom': '20px'})
-        ]) for path in image_paths if os.path.exists(path)
-    ]
+
 
     return html.Div([
         html.H1("Generating Trading Signals for Equities with Macro & Risk Data"),
@@ -212,11 +201,11 @@ def render_strat1() -> html.Div:
         dcc.Tabs([
             dcc.Tab(label='Making the Dataset & Hypothesis', children=[
                 dcc.Markdown(large_text, style={'padding': '20px'}), # explaining the hypothesis
+                
                 # html.Iframe(
-                # srcDoc=notebook_to_html('/Users/hassan/Desktop/website/api/src/eda.ipynb'),
+                # srcDoc='../../assets/eda.html',
                 # style={'width': '85%', 'height': '1000px', 'border': 'none'}
-                # ),
-                # html.Div(image_components, style={'maxWidth': '800px', 'margin': 'auto'})
+                # )
             ]),
 
             dcc.Tab(label='Processing & Triple-barrier Target', children=[
