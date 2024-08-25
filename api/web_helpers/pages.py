@@ -98,9 +98,8 @@ def render_intro():
 # section 1
 def render_strat1() -> html.Div:
     large_text ="""
-                # Macro-Driven Stock Performance Prediction
 
-                ## Hypothesis
+                ## Hypothesis for this strategy
                 - Macroeconomic factors and sector-specific risk (beta) influence individual stock returns
                 - Granular hypotheses to test:
                 1. Correlation (consider non-linear) strength of specific macro indicators with stock returns
@@ -201,12 +200,13 @@ def render_strat1() -> html.Div:
 
         dcc.Tabs([
             dcc.Tab(label='Making the Dataset & Hypothesis', children=[
+                html.H2("LINK TO NOTEBOOK:"),
+                html.Link("https://github.com/hassangaber/statarb/blob/master/api/src/eda.ipynb"),
                 dcc.Markdown(large_text, style={'padding': '20px'}), # explaining the hypothesis
                 # html.Iframe(
                 # srcDoc=notebook_to_html('/Users/hassan/Desktop/website/api/src/eda.ipynb'),
                 # style={'width': '85%', 'height': '1000px', 'border': 'none'}
                 # )
-                html.H2("LINK TO NOTEBOOK https://github.com/hassangaber/statarb/blob/master/api/src/eda.ipynb")
             ]),
 
             dcc.Tab(label='Processing & Triple-barrier Target', children=[
