@@ -200,8 +200,7 @@ def render_strat1() -> html.Div:
 
         dcc.Tabs([
             dcc.Tab(label='Making the Dataset & Hypothesis', children=[
-                html.H2("LINK TO NOTEBOOK:"),
-                html.Link("https://github.com/hassangaber/statarb/blob/master/api/src/eda.ipynb"),
+                html.A('NOTEBOOK with analysis', href='https://github.com/hassangaber/statarb/blob/master/api/src/eda.ipynb', target='_blank'),
                 dcc.Markdown(large_text, style={'padding': '20px'}), # explaining the hypothesis
                 # html.Iframe(
                 # srcDoc=notebook_to_html('/Users/hassan/Desktop/website/api/src/eda.ipynb'),
