@@ -2,7 +2,8 @@ import os
 import dash_bootstrap_components as dbc
 import pandas as pd
 from dash import dcc, html
-from api.web_helpers.utils import create_experience_card, create_professional_timeline
+from api.web_helpers.utils import create_experience_card, create_professional_timeline, get_encoded_image
+from api.web_helpers.callback.rintro import notebook_to_html
 
 
 def render_intro():
@@ -193,7 +194,7 @@ def render_strat1() -> html.Div:
                 - VOLATILITY_90D enables risk-adjusted predictions and position sizing
 
             """
-
+    
 
     return html.Div([
         html.H1("Generating Trading Signals for Equities with Macro & Risk Data"),
@@ -201,11 +202,10 @@ def render_strat1() -> html.Div:
         dcc.Tabs([
             dcc.Tab(label='Making the Dataset & Hypothesis', children=[
                 dcc.Markdown(large_text, style={'padding': '20px'}), # explaining the hypothesis
-                
-                # html.Iframe(
-                # srcDoc='../../assets/eda.html',
-                # style={'width': '85%', 'height': '1000px', 'border': 'none'}
-                # )
+                html.Iframe(
+                srcDoc=notebook_to_html('/Users/hassan/Desktop/website/api/src/eda.ipynb'),
+                style={'width': '85%', 'height': '1000px', 'border': 'none'}
+                )
             ]),
 
             dcc.Tab(label='Processing & Triple-barrier Target', children=[
