@@ -2,8 +2,13 @@ import os
 import dash_bootstrap_components as dbc
 import pandas as pd
 from dash import dcc, html
-from api.web_helpers.utils import create_experience_card, create_professional_timeline, get_encoded_image
-from api.web_helpers.callback.rintro import notebook_to_html
+from api.web_helpers.utils import create_experience_card, create_professional_timeline
+
+macro_columns = ['MACRO_INFLATION_EXPECTATION', 'MACRO_US_ECONOMY', 'MACRO_TREASURY_10Y', 'MACRO_TREASURY_5Y','MACRO_TREASURY_2Y','MACRO_VIX', 'MACRO_US_DOLLAR','MACRO_GOLD','MACRO_OIL']
+fundamental_columns = ['HIGH', 'VOLUME', 'VOLATILITY_90D']
+beta_columns = ['BETA_TS']
+
+all_feature_columns = macro_columns + fundamental_columns + beta_columns
 
 
 def render_intro():
@@ -96,40 +101,17 @@ def render_intro():
     ])
 
 # section 1
-def render_strat1() -> html.Div:
+def render_strat1(df:pd.DataFrame) -> html.Div:
     large_text ="""
 
-                ## Hypothesis for this strategy
-                - Macroeconomic factors and sector-specific risk (beta) influence individual stock returns
-                - Granular hypotheses to test:
-                1. Correlation (consider non-linear) strength of specific macro indicators with stock returns
-                2. Sector beta impact during varying economic conditions
-                3. Lag effects between macro changes and stock price directions/momentum
-                4. Volatility-macro indicator relationships
-
-                ## Dataset Overview
-                - 16 stocks: price, volume, volatility (2020-01-01 to 2024-05-03)
-                - 13 macro indicators (e.g., inflation, unemployment, Treasury yields)
-                - 11 sector ETFs for beta calculation
-
-                ## Data Structure
-                - `equity_data_with_macro`:
-                - Stock features: ID, DATE, CLOSE, HIGH, VOLUME, VOLATILITY_90D
-                - Macro indicators: MACRO_*
-                - BETA_TS: 6-month rolling window
-
-                ## Key Assumptions
-                1. End-of-day trading only (due to data frequency)
-                2. Proper macro-stock data alignment
-                3. Some market inefficiency exists
-                4. Potential non-stationarity in time series
-                5. Possible non-linear relationships
-                6. VOLATILITY_90D assumes gradual volatility changes
-
-                ## Statistical Considerations
-                - Autocorrelation in time series/Heteroscedasticity
-                - Multicollinearity among macro indicators
-                - Non-normal return distributions
+                | H:          | Description | Signal Generation |
+                |------------|-------------|-------------------|
+                | 1:    | There's a non-linear relationship between inflation expectations and stock returns, particularly for certain sectors. | - When inflation expectations (measured by the TIP ETF) rise above a certain threshold, the model might generate a signal to underweight consumer discretionary stocks (like AMZN) and overweight companies with pricing power or inflation-protected revenues (like utilities, SOset).- If inflation expectations are rising but still below the threshold, the model might favor growth stocks (like NVDA) that can potentially outpace inflation. |
+                | 2:    | The technology sector's beta increases during economic expansion and decreases during contraction. | - Use the US_Economy proxy (SPY) to determine the economic condition.- Compare the current beta of the technology sector (calculated from stocks like AAPL, NVDA) to its historical average.- Generate buy/sell signals based on the divergence of current beta from historical average, considering the economic condition. |
+                | 3:    | Changes in interest rates (Treasury yields) lead changes in financial sector stock performance with a lag of 1-3 months. | - Monitor changes in the 10-Year Treasury Yield (^TNX). - Generate signals for financial sector stocks (like JPM) based on significant yield changes from 1-3 months ago. |
+                | 4:    | There's a positive correlation between market volatility (VIX) and gold prices, but the relationship strengthens during periods of high uncertainty. | - Monitor the VIX index and gold prices (GLD).- Generate signals for gold-related assets when VIX spikes occur, especially if other uncertainty indicators (like economic policy uncertainty) are also elevated. |
+                | 5:    | Different sectors outperform at different stages of the economic cycle. | - Use a combination of indicators (GDP growth, unemployment, inflation) to determine the current stage of the economic cycle.- Generate sector rotation signals based on the identified stage. |
+                | 6:    | A strong US dollar negatively impacts the earnings of U.S. multinational companies with significant overseas revenues. | - Monitor the US Dollar Index (DX-Y.NYB).- Generate signals for U.S. multinationals (like AAPL, MSFT) when the dollar strength exceeds certain thresholds. |
 
                 ## Relevant Literature
                 1. Gu, S., Kelly, B., & Xiu, D. (2020). Empirical Asset Pricing via Machine Learning. The Review of Financial Studies.
@@ -142,55 +124,6 @@ def render_strat1() -> html.Div:
 
                 3. Rapach, D. E., Ringgenberg, M. C., & Zhou, G. (2016). Short interest and aggregate stock returns. Journal of Financial Economics.
                 - Demonstrated the predictive power of aggregate short interest for market returns
-                
-
-                ## Execution Plan
-
-                ### Current Status
-                - dataset combining stock-specific features, macro indicators, and sector betas
-                - Data aligned and preprocessed for analysis (2020-01-01 to 2024-05-03)
-                - Hypotheses formulated linking macro factors to stock performance
-
-                ### Objective
-                - Develop a model to generate excess returns using the triple barrier method
-
-                ### Triple Barrier Method Implementation
-                1. Label Generation:
-                - Use CLOSE prices to calculate (log) returns
-                - Define upper and lower return thresholds (e.g., +/-5%)
-                - Set a maximum holding period (e.g., 10 trading days)
-                - Label each instance as 1 (upper barrier hit), -1 (lower barrier hit), or 0 (time barrier hit)
-
-                2. Feature Engineering:
-                - Utilize MACRO_* indicators as primary features
-                - Incorporate BETA_TS for sector-specific risk
-                - Consider lagged features to capture delayed market reactions
-                - Create interaction terms between macro indicators and BETA_TS
-
-                3. Model Development:
-                - Train classification models (e.g., Random Forest, XGBoost)
-                - Use VOLATILITY_90D for sample weighting to address heteroscedasticity
-                - Implement cross-validation with purged K-fold to prevent look-ahead bias
-
-                4. Performance Evaluation:
-                - Sharpe ratio, maximum drawdown, and hit rate
-                - Compare against buy-and-hold and sector ETF benchmarks
-
-                ### Rationale for Dataset and Method
-                1. Macro-Micro Integration:
-                - Dataset uniquely combines firm-specific, sector, and macro-level data
-                - Allows for capturing complex interactions across different economic scales
-
-                2. Time Series Nature:
-                - Daily frequency captures short-term market reactions to macro changes
-                - BETA_TS provides dynamic risk assessment
-
-                3. Triple Barrier Relevance:
-                - Symmetric approach to defining trading opportunities
-                - Aligns with real-world trading constraints (stop-loss, take-profit, time limits)
-
-                4. Volatility Incorporation:
-                - VOLATILITY_90D enables risk-adjusted predictions and position sizing
 
             """
     
@@ -200,12 +133,44 @@ def render_strat1() -> html.Div:
 
         dcc.Tabs([
             dcc.Tab(label='Making the Dataset & Hypothesis', children=[
-                html.A('NOTEBOOK with analysis', href='https://github.com/hassangaber/statarb/blob/master/api/src/eda.ipynb', target='_blank'),
-                dcc.Markdown(large_text, style={'padding': '20px'}), # explaining the hypothesis
-                # html.Iframe(
-                # srcDoc=notebook_to_html('/Users/hassan/Desktop/website/api/src/eda.ipynb'),
-                # style={'width': '85%', 'height': '1000px', 'border': 'none'}
-                # )
+                html.Div(),
+                html.H3("Below is the link to ingesting and manipulating the dataset into the master dataset:"),
+                html.A('Jupyter Notebook On GitHub', href='https://github.com/hassangaber/statarb/blob/master/api/src/eda.ipynb', target='_blank', style={'font-size':'20px'}),
+                html.Div(),
+                dcc.Markdown(large_text, style={'padding': '10px','font-size':'20px'}), # explaining the hypothesis
+            ]),
+
+            dcc.Tab(label='Explore dataset', children=[
+
+                        html.Div([
+                html.Div([
+                    html.Label('Select Asset:'),
+                    dcc.Dropdown(
+                        id='asset-dropdown',
+                        options=[{'label': i, 'value': i} for i in df['ID'].unique()],
+                        value=df['ID'].unique()[0]
+                    ),
+                ], style={'width': '30%', 'display': 'inline-block'}),
+                
+                html.Div([
+                    html.Label('Select Features:'),
+                    dcc.Dropdown(
+                        id='feature-dropdown',
+                        options=[
+                            {'label': f'Macro: {i}', 'value': i} for i in macro_columns
+                        ] + [
+                            {'label': f'Fundamental: {i}', 'value': i} for i in fundamental_columns
+                        ] + [
+                            {'label': f'Beta: {i}', 'value': i} for i in beta_columns
+                        ],
+                        value=[macro_columns[0], fundamental_columns[0], beta_columns[0]],
+                        multi=True
+                    ),
+                ], style={'width': '70%', 'display': 'inline-block'})
+            ]),
+            
+            dcc.Graph(id='unified-graph', style={'height': '80vh'})
+
             ]),
 
             dcc.Tab(label='Processing & Triple-barrier Target', children=[
@@ -218,8 +183,4 @@ def render_strat1() -> html.Div:
             
         ])
     ])
-
-
-def render_eq1(df: pd.DataFrame) -> html.Div:
-    return None
 

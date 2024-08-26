@@ -6,11 +6,11 @@ from dash import Input, Output
 
 from api.web_helpers.callbacks import register_callbacks
 from api.web_helpers.layout import export_layout
-from api.web_helpers.pages import render_eq1, render_intro, render_strat1
+from api.web_helpers.pages import render_intro, render_strat1
 
 global APP
 
-df = pd.read_csv("assets/data.csv")
+df = pd.read_csv("assets/macro_beta_equities.csv")
 df.DATE = pd.to_datetime(df.DATE)
 
 APP = dash.Dash(__name__, 
@@ -28,10 +28,7 @@ def display_page(pathname) -> callable:
     if pathname == "/":
         return render_intro()
     elif pathname == "/equity-1":
-        return render_strat1()
-    elif pathname == "/equity-2":
-        return 
-    
+        return render_strat1(df)
     else:
         return "404 - Page not found"
 
