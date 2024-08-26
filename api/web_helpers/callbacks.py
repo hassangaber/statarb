@@ -39,7 +39,7 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
             return go.Figure().add_annotation(text="No data available for selected asset", showarrow=False)
 
         # Ensure all required columns are present
-        required_columns = ['DATE', 'CLOSE', 'HIGH', 'VOLUME']
+        required_columns = ['DATE', 'CLOSE', 'VOLUME']
         if not all(col in asset_data.columns for col in required_columns):
             return go.Figure().add_annotation(text="Missing required data columns", showarrow=False)
 
@@ -58,10 +58,10 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
                                 name='Close Price', line=dict(color='blue')),
                     row=1, col=1)
 
-        # Add asset price (high)
-        fig.add_trace(go.Scatter(x=asset_data['DATE'], y=asset_data['HIGH'],
-                                name='High Price', line=dict(color='lightblue', dash='dot')),
-                    row=1, col=1)
+        # # Add asset price (high)
+        # fig.add_trace(go.Scatter(x=asset_data['DATE'], y=asset_data['HIGH'],
+        #                         name='High Price', line=dict(color='lightblue', dash='dot')),
+        #             row=1, col=1)
 
         # Add volume bars
         fig.add_trace(go.Bar(x=asset_data['DATE'], y=asset_data['VOLUME'],
@@ -88,20 +88,32 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
                                     name=name, yaxis='y3', line=dict(color=color)),
                         row=1, col=1)
 
-        # Add 50-day and 200-day moving averages
-        fig.add_trace(go.Scatter(x=asset_data['DATE'], y=asset_data['CLOSE'].rolling(window=50).mean(),
-                                name='50-day MA', line=dict(color='orange')),
-                    row=1, col=1)
-        fig.add_trace(go.Scatter(x=asset_data['DATE'], y=asset_data['CLOSE'].rolling(window=200).mean(),
-                                name='200-day MA', line=dict(color='red')),
-                    row=1, col=1)
-
         # Add significant events
         events = [
-            ('2020-03-23', 'COVID-19 Market Bottom'),
-            ('2021-01-06', 'US Capitol Riot'),
-            ('2022-02-24', 'Russia-Ukraine War Begins'),
-        ]
+                ('2020-03-23', 'COVID-19 Market Bottom'),
+                #('2021-01-06', 'US Capitol Riot'),
+                #('2022-02-24', 'Russia-Ukraine War Begins'),
+                ('2021-02-08', 'Bitcoin Exceeds $44,000'),
+                #('2021-05-12', 'Colonial Pipeline Cyberattack'),
+                ('2022-07-27', 'Fed Hike by 75 bps'),
+                ('2022-09-15', 'Ethereum Merge'),
+                ('2020-08-31', 'Apple,Tesla Splits'),
+                #('2021-10-28', 'Facebook Rebrands as Meta'),
+                #('2022-04-25', 'Elon Musk Acquires Twitter'),
+                #('2022-11-11', 'FTX Cryptocurrency Exchange Collapse'),
+                ('2022-11-30', 'OpenAI ChatGPT'),
+                #('2023-03-14', 'SVB Collapse'),
+                ('2022-05-04', 'Fed Largest Rate Hike Since 2000'),
+                #('2022-08-16', 'Inflation Reduction Act Signed'),
+                #('2023-03-10', 'Signature Bank Collapse'),
+                #('2023-05-01', 'First Republic Bank Fails'),
+                #('2023-06-29', 'Supreme Court Strikes Down Student Loan Forgiveness'),
+                ('2023-07-13', 'Inflation Falls in US'),
+                #('2023-11-08', 'Bitcoin Surpasses $37,000'),
+                ('2024-01-10', 'SEC Approves Spot Bitcoin ETFs'),
+                ('2023-11-17', 'NVIDIA Hits $1 Trillion Market Cap'),
+                #('2023-11-06', 'OpenAI Launches GPT-4 Turbo')
+            ]
 
         for date, event in events:
             event_date = pd.to_datetime(date)
@@ -113,8 +125,8 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
 
         # Update layout for a more professional look
         fig.update_layout(
-            title=f'{selected_asset} - Comprehensive Financial Analysis',
-            height=800,
+            title=f'{selected_asset}',
+            height=950,
             hovermode='x unified',
             plot_bgcolor='white',
             paper_bgcolor='white',

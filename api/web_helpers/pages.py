@@ -163,7 +163,7 @@ def render_strat1(df:pd.DataFrame) -> html.Div:
                         ] + [
                             {'label': f'Beta: {i}', 'value': i} for i in beta_columns
                         ],
-                        value=[macro_columns[0], fundamental_columns[0], beta_columns[0]],
+                        value=[macro_columns[0]],
                         multi=True
                     ),
                 ], style={'width': '70%', 'display': 'inline-block'})
