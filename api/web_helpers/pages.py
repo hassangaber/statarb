@@ -1,8 +1,11 @@
 import os
+
 import dash_bootstrap_components as dbc
 import pandas as pd
-from dash import dcc, html
-from api.web_helpers.utils import create_experience_card, create_professional_timeline
+from dash import dash_table, dcc, html
+
+from api.web_helpers.utils import (create_experience_card,
+                                   create_professional_timeline)
 
 macro_columns = ['MACRO_INFLATION_EXPECTATION', 'MACRO_US_ECONOMY', 'MACRO_TREASURY_10Y', 'MACRO_TREASURY_5Y','MACRO_TREASURY_2Y','MACRO_VIX', 'MACRO_US_DOLLAR','MACRO_GOLD','MACRO_OIL']
 fundamental_columns = ['HIGH', 'VOLUME', 'VOLATILITY_90D']
@@ -103,6 +106,15 @@ def render_intro():
 # section 1
 def render_strat1(df:pd.DataFrame) -> html.Div:
     large_text ="""
+                The dataset includes 9 macroeconomic features, 1 sector-beta feature, and 4 fundamentals (close price, high price, volume, and realized volatility). These features are the basis by which I make the hypotheses below. These features are related to the observation either by sector or by country (so AAPL observations would have the United States Inflation, technology sector beta time-series). The data displayed in the exploration tab is raw and not representitative of the stationary series given to the models.
+
+                ---
+
+                An important note regarding trading signals: due to the nature of the fundamental and beta features, they are observed at the end of the trading day, trading decisions and signals can only be generated at the end of the trading day. Otherwise, look-a-ahead bias will be introduced. Most likely, a signal will be generated using observations from time tick N and the signal will be applied on time tick N + 1.
+
+                ---
+
+                Trading hypotheses
 
                 | H:          | Description | Signal Generation |
                 |------------|-------------|-------------------|
@@ -112,6 +124,8 @@ def render_strat1(df:pd.DataFrame) -> html.Div:
                 | 4:    | There's a positive correlation between market volatility (VIX) and gold prices, but the relationship strengthens during periods of high uncertainty. | - Monitor the VIX index and gold prices (GLD).- Generate signals for gold-related assets when VIX spikes occur, especially if other uncertainty indicators (like economic policy uncertainty) are also elevated. |
                 | 5:    | Different sectors outperform at different stages of the economic cycle. | - Use a combination of indicators (GDP growth, unemployment, inflation) to determine the current stage of the economic cycle.- Generate sector rotation signals based on the identified stage. |
                 | 6:    | A strong US dollar negatively impacts the earnings of U.S. multinational companies with significant overseas revenues. | - Monitor the US Dollar Index (DX-Y.NYB).- Generate signals for U.S. multinationals (like AAPL, MSFT) when the dollar strength exceeds certain thresholds. |
+
+                ---
 
                 ## Relevant Literature
                 1. Gu, S., Kelly, B., & Xiu, D. (2020). Empirical Asset Pricing via Machine Learning. The Review of Financial Studies.
@@ -141,37 +155,37 @@ def render_strat1(df:pd.DataFrame) -> html.Div:
             ]),
 
             dcc.Tab(label='Explore dataset', children=[
-
-                        html.Div([
-                html.Div([
-                    html.Label('Select Asset:'),
-                    dcc.Dropdown(
-                        id='asset-dropdown',
-                        options=[{'label': i, 'value': i} for i in df['ID'].unique()],
-                        value=df['ID'].unique()[0]
-                    ),
-                ], style={'width': '30%', 'display': 'inline-block'}),
-                
-                html.Div([
-                    html.Label('Select Features:'),
-                    dcc.Dropdown(
-                        id='feature-dropdown',
-                        options=[
-                            {'label': f'Macro: {i}', 'value': i} for i in macro_columns
-                        ] + [
-                            {'label': f'Fundamental: {i}', 'value': i} for i in fundamental_columns
-                        ] + [
-                            {'label': f'Beta: {i}', 'value': i} for i in beta_columns
-                        ],
-                        value=[macro_columns[0]],
-                        multi=True
-                    ),
-                ], style={'width': '70%', 'display': 'inline-block'})
-            ]),
+        html.Div([
+            html.Div([
+                html.Label('Select Asset:', style={'font-weight': 'bold'}),
+                dcc.Dropdown(
+                    id='asset-dropdown',
+                    options=[{'label': i, 'value': i} for i in df['ID'].unique()],
+                    value=df['ID'].unique()[0],
+                    style={'width': '100%'}
+                ),
+            ], style={'width': '30%', 'display': 'inline-block', 'vertical-align': 'top'}),
             
-            dcc.Graph(id='unified-graph', style={'height': '80vh'})
-
-            ]),
+            html.Div([
+                html.Label('Select Features:', style={'font-weight': 'bold'}),
+                dcc.Dropdown(
+                    id='feature-dropdown',
+                    options=[
+                        {'label': f'Macro: {i}', 'value': i} for i in macro_columns
+                    ] + [
+                        {'label': f'Fundamental: {i}', 'value': i} for i in fundamental_columns
+                    ] + [
+                        {'label': f'Beta: {i}', 'value': i} for i in beta_columns
+                    ],
+                    value=[macro_columns[0]],
+                    multi=True,
+                    style={'width': '100%'}
+                ),
+            ], style={'width': '65%', 'display': 'inline-block', 'vertical-align': 'top', 'margin-left': '5%'})
+        ], style={'margin-bottom': '20px'}),
+        
+        dcc.Graph(id='unified-graph', style={'height': '120vh'}),
+    ]),
 
             dcc.Tab(label='Processing & Triple-barrier Target', children=[
                 

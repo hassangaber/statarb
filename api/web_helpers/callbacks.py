@@ -1,15 +1,11 @@
 
-import pandas as pd
-
-
 import dash
-from dash import callback_context, html, dash_table
-from dash.dependencies import Input, Output, State
-import plotly.graph_objs as go
-from plotly.subplots import make_subplots
 import numpy as np
-
-
+import pandas as pd
+import plotly.graph_objs as go
+from dash import Input, Output, State
+from plotly.subplots import make_subplots
+from scipy import stats
 
 macro_columns = ['MACRO_INFLATION_EXPECTATION', 'MACRO_US_ECONOMY', 'MACRO_TREASURY_10Y', 'MACRO_TREASURY_5Y','MACRO_TREASURY_2Y','MACRO_VIX', 'MACRO_US_DOLLAR','MACRO_GOLD','MACRO_OIL']
 fundamental_columns = ['HIGH', 'VOLUME', 'VOLATILITY_90D']
@@ -23,13 +19,14 @@ all_feature_columns = macro_columns + fundamental_columns + beta_columns
 
 def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
 
+
+
     @app.callback(
         Output('unified-graph', 'figure'),
         [Input('asset-dropdown', 'value'),
         Input('feature-dropdown', 'value')]
     )
-    def update_graph(selected_asset, selected_features):
-        # Error checking
+    def update_dashboard(selected_asset, selected_features):
         if selected_asset not in df['ID'].unique():
             return go.Figure().add_annotation(text="Invalid asset selected", showarrow=False)
         
@@ -38,34 +35,33 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
         if asset_data.empty:
             return go.Figure().add_annotation(text="No data available for selected asset", showarrow=False)
 
-        # Ensure all required columns are present
         required_columns = ['DATE', 'CLOSE', 'VOLUME']
         if not all(col in asset_data.columns for col in required_columns):
             return go.Figure().add_annotation(text="Missing required data columns", showarrow=False)
 
-        # Convert DATE to datetime if it's not already
         asset_data['DATE'] = pd.to_datetime(asset_data['DATE'])
-
-        # Sort data by date
         asset_data = asset_data.sort_values('DATE')
 
-        # Create subplots
-        fig = make_subplots(rows=2, cols=1, shared_xaxes=True, 
-                            vertical_spacing=0.03, row_heights=[0.7, 0.3])
+        log_returns = np.diff(np.log(asset_data['CLOSE']))
+        asset_data['Log_Return'] = pd.Series([np.nan] + log_returns.tolist(), index=asset_data.index)
         
+        fig = make_subplots(rows=4, cols=1, 
+                            vertical_spacing=0.1,  # Increased spacing between subplots
+                            row_heights=[0.4, 0.2, 0.2, 0.3],  # Adjusted row heights
+                            specs=[[{"secondary_y": True}],
+                                [{"secondary_y": False}],
+                                [{"secondary_y": False}],
+                                [{"secondary_y": False}]],
+                            subplot_titles=("Asset Price and Features", "Volume", "Log Returns Distribution", "Correlation Heatmap"))
+
         # Add asset price (close)
         fig.add_trace(go.Scatter(x=asset_data['DATE'], y=asset_data['CLOSE'],
-                                name='Close Price', line=dict(color='blue')),
-                    row=1, col=1)
-
-        # # Add asset price (high)
-        # fig.add_trace(go.Scatter(x=asset_data['DATE'], y=asset_data['HIGH'],
-        #                         name='High Price', line=dict(color='lightblue', dash='dot')),
-        #             row=1, col=1)
+                                name='Close Price', line=dict(color='#1f77b4', width=2)),
+                    row=1, col=1, secondary_y=False)
 
         # Add volume bars
         fig.add_trace(go.Bar(x=asset_data['DATE'], y=asset_data['VOLUME'],
-                            name='Volume', marker_color='rgba(0, 0, 255, 0.3)'),
+                            name='Volume', marker_color='rgba(31, 119, 180, 0.3)'),
                     row=2, col=1)
 
         # Add selected features
@@ -75,78 +71,76 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
                 continue
             
             if feature in macro_columns:
+                color = '#ff7f0e'  # Orange for macro
                 name = f'Macro: {feature}'
-                color = 'rgba(255, 0, 0, 0.5)'  # Red for macro
             elif feature in fundamental_columns:
+                color = '#2ca02c'  # Green for fundamental
                 name = f'Fundamental: {feature}'
-                color = 'rgba(0, 255, 0, 0.5)'  # Green for fundamental
             else:
+                color = '#9467bd'  # Purple for beta
                 name = f'Beta: {feature}'
-                color = 'rgba(128, 0, 128, 0.5)'  # Purple for beta
             
             fig.add_trace(go.Scatter(x=asset_data['DATE'], y=asset_data[feature],
-                                    name=name, yaxis='y3', line=dict(color=color)),
-                        row=1, col=1)
+                                    name=name, line=dict(color=color, width=1.5)),
+                        row=1, col=1, secondary_y=True)
 
-        # Add significant events
-        events = [
-                ('2020-03-23', 'COVID-19 Market Bottom'),
-                #('2021-01-06', 'US Capitol Riot'),
-                #('2022-02-24', 'Russia-Ukraine War Begins'),
-                ('2021-02-08', 'Bitcoin Exceeds $44,000'),
-                #('2021-05-12', 'Colonial Pipeline Cyberattack'),
-                ('2022-07-27', 'Fed Hike by 75 bps'),
-                ('2022-09-15', 'Ethereum Merge'),
-                ('2020-08-31', 'Apple,Tesla Splits'),
-                #('2021-10-28', 'Facebook Rebrands as Meta'),
-                #('2022-04-25', 'Elon Musk Acquires Twitter'),
-                #('2022-11-11', 'FTX Cryptocurrency Exchange Collapse'),
-                ('2022-11-30', 'OpenAI ChatGPT'),
-                #('2023-03-14', 'SVB Collapse'),
-                ('2022-05-04', 'Fed Largest Rate Hike Since 2000'),
-                #('2022-08-16', 'Inflation Reduction Act Signed'),
-                #('2023-03-10', 'Signature Bank Collapse'),
-                #('2023-05-01', 'First Republic Bank Fails'),
-                #('2023-06-29', 'Supreme Court Strikes Down Student Loan Forgiveness'),
-                ('2023-07-13', 'Inflation Falls in US'),
-                #('2023-11-08', 'Bitcoin Surpasses $37,000'),
-                ('2024-01-10', 'SEC Approves Spot Bitcoin ETFs'),
-                ('2023-11-17', 'NVIDIA Hits $1 Trillion Market Cap'),
-                #('2023-11-06', 'OpenAI Launches GPT-4 Turbo')
-            ]
+        # Add log returns distribution
+        returns = asset_data['Log_Return'].dropna()
+        mean_return = returns.mean()
+        std_return = returns.std()
+        
+        iqr = stats.iqr(returns)
+        bin_width = 2 * iqr / (len(returns) ** (1/3))
+        num_bins = int((returns.max() - returns.min()) / bin_width)
+        
+        fig.add_trace(
+            go.Histogram(x=returns, nbinsx=num_bins, name='Log Returns',
+                        marker_color='rgba(31, 119, 180, 0.7)'),
+            row=3, col=1
+        )
+        
+        fig.add_vline(x=mean_return, line_dash="dash", line_color="red",
+                    annotation_text=f"Mean: {mean_return:.4f}", 
+                    annotation_position="top right",
+                    row=3, col=1)
 
-        for date, event in events:
-            event_date = pd.to_datetime(date)
-            if event_date in asset_data['DATE'].values:
-                y_value = asset_data.loc[asset_data['DATE'] == event_date, 'HIGH'].values[0]
-                fig.add_annotation(x=event_date, y=y_value,
-                                text=event, showarrow=True, arrowhead=2, arrowsize=1, arrowwidth=2,
-                                arrowcolor='rgba(255, 0, 0, 0.5)', ax=0, ay=-40)
+        # Add correlation heatmap
+        corr_data = asset_data[['CLOSE'] + selected_features].corr()
+        fig.add_trace(go.Heatmap(
+            z=corr_data.values,
+            x=corr_data.columns,
+            y=corr_data.columns,
+            colorscale='RdBu_r',  # Red-White-Blue diverging colorscale
+            zmin=-1, zmax=1,
+            name='Correlation Heatmap',
+            showscale=False  # This removes the color gradient key
+        ), row=4, col=1)
 
-        # Update layout for a more professional look
+        # Update layout
         fig.update_layout(
-            title=f'{selected_asset}',
-            height=950,
-            hovermode='x unified',
-            plot_bgcolor='white',
-            paper_bgcolor='white',
-            font=dict(size=12),
-            margin=dict(l=50, r=50, t=50, b=50),
+            title=f'{selected_asset} - Comprehensive Analysis',
+            height=1600,  # Increased height to accommodate the larger spacing
             showlegend=True,
-            legend_title_text='Indicators',
-            legend=dict(x=1.05, y=1, bordercolor='Black', borderwidth=1)
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            plot_bgcolor='rgba(240,240,240,0.5)',
+            paper_bgcolor='white',
+            font=dict(family="Arial", size=10),
         )
 
-        # Update y-axes
-        fig.update_yaxes(title_text="Price", secondary_y=False, row=1, col=1)
+        # Update axes
+        for i in range(1, 5):
+            fig.update_xaxes(showgrid=True, gridcolor='white', linecolor='lightgrey', row=i, col=1)
+            fig.update_yaxes(showgrid=True, gridcolor='white', linecolor='lightgrey', row=i, col=1)
+
+        fig.update_xaxes(title_text="Date", row=1, col=1)
+        fig.update_xaxes(title_text="Date", row=2, col=1)
+        fig.update_xaxes(title_text="Log Return", row=3, col=1)
+        fig.update_yaxes(title_text="Close Price", secondary_y=False, row=1, col=1)
         fig.update_yaxes(title_text="Feature Value", secondary_y=True, row=1, col=1)
         fig.update_yaxes(title_text="Volume", row=2, col=1)
+        fig.update_yaxes(title_text="Frequency", row=3, col=1)
 
-        # Update x-axis to show date range only once
-        fig.update_xaxes(title_text="Date", row=2, col=1)
-        fig.update_xaxes(showticklabels=False, row=1, col=1)  # Hide x-axis labels for the top subplot
-
-        # Add range selector to bottom subplot
+        # Add range selector
         fig.update_xaxes(
             rangeslider_visible=False,
             rangeselector=dict(
@@ -158,11 +152,11 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
                     dict(step="all")
                 ])
             ),
-            row=2, col=1
+            row=1, col=1
         )
 
-        # Add gridlines
-        fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey')
-        fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='LightGrey', zerolinecolor='LightGrey')
+        # Clip the returns graph
+        returns_range = 6 * std_return
+        fig.update_xaxes(range=[mean_return - returns_range, mean_return + returns_range], row=3, col=1)
 
         return fig
