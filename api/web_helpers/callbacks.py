@@ -7,11 +7,13 @@ from dash import Input, Output, State
 from plotly.subplots import make_subplots
 from scipy import stats
 
-macro_columns = ['MACRO_INFLATION_EXPECTATION', 'MACRO_US_ECONOMY', 'MACRO_TREASURY_10Y', 'MACRO_TREASURY_5Y','MACRO_TREASURY_2Y','MACRO_VIX', 'MACRO_US_DOLLAR','MACRO_GOLD','MACRO_OIL']
-fundamental_columns = ['HIGH', 'VOLUME', 'VOLATILITY_90D']
-beta_columns = ['BETA_TS']
+from typing import Final
 
-all_feature_columns = macro_columns + fundamental_columns + beta_columns
+MACRO: Final[list[str]] = ['MACRO_INFLATION_EXPECTATION', 'MACRO_US_ECONOMY', 'MACRO_TREASURY_10Y', 'MACRO_TREASURY_5Y','MACRO_TREASURY_2Y','MACRO_VIX', 'MACRO_US_DOLLAR','MACRO_GOLD','MACRO_OIL']
+FUNDAMENTALS: Final[list[str]] = ['HIGH', 'VOLUME', 'VOLATILITY_90D']
+BETA: Final[list[str]] = ['BETA_TS']
+
+ALL_FEATURES = MACRO + FUNDAMENTALS + BETA
 
 
 
@@ -26,7 +28,7 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
         [Input('asset-dropdown', 'value'),
         Input('feature-dropdown', 'value')]
     )
-    def update_dashboard(selected_asset, selected_features):
+    def update_macro_dataset_dashboard(selected_asset: str, selected_features: list[str]) -> go.Figure:
         if selected_asset not in df['ID'].unique():
             return go.Figure().add_annotation(text="Invalid asset selected", showarrow=False)
         
@@ -70,10 +72,10 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
                 print(f"Warning: {feature} not found in data")
                 continue
             
-            if feature in macro_columns:
+            if feature in MACRO:
                 color = '#ff7f0e'  # Orange for macro
                 name = f'Macro: {feature}'
-            elif feature in fundamental_columns:
+            elif feature in FUNDAMENTALS:
                 color = '#2ca02c'  # Green for fundamental
                 name = f'Fundamental: {feature}'
             else:
@@ -160,3 +162,7 @@ def register_callbacks(app: dash.Dash, df: pd.DataFrame) -> None:
         fig.update_xaxes(range=[mean_return - returns_range, mean_return + returns_range], row=3, col=1)
 
         return fig
+    
+
+
+    
